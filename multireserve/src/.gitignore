@@ -1,0 +1,37 @@
+# Archivos de compilación
+target/
+build/
+
+# Archivos de dependencias
+*.jar
+*.war
+*.ear
+
+# Archivos comprimidos
+*.zip
+*.tar
+*.tar.gz
+*.rar
+
+# Archivos de configuración sensibles
+*.env
+application.properties
+application.yml
+
+# Archivos de IDE
+*.iml
+.idea/
+.vscode/
+*.class
+
+# Archivos de sistema
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Archivos temporales
+*.swp
+*.swo
+*.tmp
