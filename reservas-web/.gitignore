@@ -1,0 +1,20 @@
+# Frontend
+multireserve/target/
+multireserve/.gradle/
+multireserve/.settings/
+multireserve/.classpath
+multireserve/.project
+multireserve/*.log
+
+# Backend
+reservas-web/node_modules/
+reservas-web/dist/
+reservas-web/.env
+
+# Editor e IDEs
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
