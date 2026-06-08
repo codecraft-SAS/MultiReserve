@@ -19,6 +19,7 @@
 * **🔹 Propuesta 3 (🐾 Pet Adoption System):** Orientada a centralizar y hacer un seguimiento riguroso del flujo de solicitudes y estados transaccionales (Pendiente, Aprobado, Finalizado).
 
 ### 🎯 El Enfoque Modular de MultiReserve
+
 En lugar de construir tres sistemas aislados, **CodeCraft-SAS** diseñó una **Plataforma Centralizada e Inteligente**. Bajo esta arquitectura, cualquier establecimiento comercial (canchas sintéticas o billares) se mapea como un **Negocio**, y sus activos físicos o espacios se gestionan de forma dinámica como **Recursos** independientes, aplicando un flujo transaccional y analítico seguro heredado de los mejores flujos de procesos.
 
 ---
@@ -31,10 +32,95 @@ El proyecto está construido bajo una arquitectura desacoplada que separa de for
 reservas/ (Raíz del Repositorio)
 ├── multireserve/   ──> Backend (Java 17 / Spring Boot 3)
 └── reservas-web/   ──> Frontend (React / TypeScript / Vite)
-☕ 1. Backend API (multireserve)Servidor empresarial REST robusto desarrollado con Spring Boot 3, Spring Security, JWT y Spring Data JPA para la gestión analítica y segura de espacios y activos.📂 Arquitectura en Capasconfig/ → Configuración general de la aplicación, inyección de beans y políticas CORS.controller/ → Controladores REST que exponen los endpoints estructurados de la API.dto/ → Data Transfer Objects, usados para transportar datos de manera segura sin exponer directamente las entidades JPA.entity/ → Entidades relacionales mapeadas con Hibernate (Users, Business, Resource, Reservation).exception/ → Centralización del manejo global de errores y excepciones personalizadas (@RestControllerAdvice).repository/ → Interfaces de acceso a datos de alto rendimiento optimizadas con Spring Data JPA.security/ → Filtros de interceptación (JwtAuthenticationFilter), encriptación de credenciales con BCrypt y reglas en SecurityConfig.service/ → Lógica del núcleo de negocio, validaciones transaccionales y de disponibilidad horaria.🔐 Características Principales del ServidorControl de Acceso basado en Roles (RBAC): Restricciones nativas integradas para segmentar de forma estricta las capacidades operativas del software.Seguridad a Nivel de Datos (Ownership Security): Cada reserva está ligada de forma inmutable al usuario autenticado. Los clientes solo pueden auditar sus propios registros extraídos de la firma segura del JWT.Validación Anti-Solapamiento: Algoritmo en la capa de servicios que impide el cruce de horarios (double-booking) asegurando que un recurso no reciba reservas coincidentes.⚛️ 2. Frontend Web (reservas-web)Aplicación de página única (SPA) desarrollada con React, TypeScript y Vite, garantizando una experiencia de usuario fluida, tipada y veloz.📂 Características Interactivas AvanzadasEstado Global y Consumo de API: Integración de Axios centralizado mediante interceptores HTTP para adjuntar de forma automática el token JWT en las cabeceras de cada petición.Dashboard Analítico de Alto Rendimiento: Interfaz optimizada con CSS Grid responsivo que adapta dinámicamente los paneles analíticos distribuidos de la plataforma.Renderizado Condicional e Interfaz Inmersiva: Menú lateral (Sidebar) dinámico y rutas protegidas en caliente según los privilegios del rol. El diseño implementa tarjetas visuales estilizadas con desenfoques de fondo (backdrop filters), degradados de color y sutiles efectos luminosos (glow cards).👥 Control de Accesos y Permisos por RolEl sistema segmenta la experiencia y las capacidades funcionales basándose en tres roles de acceso estrictos:👑 1. Administrador (ADMIN)Visualización: Acceso irrestricto al Dashboard Operativo Principal con indicadores financieros agregados, reportes analíticos de facturación real, gráficos de distribución de reservas y volumen mensual de transacciones de toda la plataforma.Operaciones:Gestión y administración integral de Usuarios (Crear, editar roles y auditar cuentas de administradores, empleados y clientes).Alta, modificación y control de Negocios dentro de la plataforma (Habilitar nuevos comercios asociados).Administración global de la infraestructura de Recursos.💼 2. Empleado / Socio (EMPLOYEE)Visualización: Acceso a las métricas del tablero de control limitadas al rendimiento analítico, volumen de reservas e infraestructura de activos específicos de su propio negocio asociado.Operaciones:Monitoreo e interacción directa con el listado dinámico de Reservas operativas de su establecimiento.Cambiar los estados de las reservas solicitadas por los clientes (Confirmar solicitudes, rechazarlas o marcarlas como COMPLETED al concluir exitosamente el servicio).Registro manual express de nuevas reservas en el sistema en caso de atención física o telefónica directa en el local.👤 3. Cliente Final (CLIENT)Visualización: Catálogo público interactivo de los establecimientos disponibles, consulta de recursos libres con sus respectivos horarios y panel personal de seguimiento transaccional.Operaciones:Creación, agendamiento y procesamiento autónomo de nuevas reservas seleccionando el negocio, recurso y franja horaria deseada.Cancelación de sus propias reservas generadas en caso de estar aún en estado de aprobación pendiente (PENDING).Restricciones: Bloqueo absoluto a los menús administrativos de Reportes globales, gestión de Negocios de terceros y el panel de administración de Cuentas de Usuarios.📋 Endpoints y Guía de Pruebas (Flujo de Validación)El sistema inicializa automáticamente un usuario ADMIN por defecto para facilitar las pruebas iniciales y la carga del Dashboard:Email: admin@gmail.comPassword: 123456🔐 1. Autenticación y CuentasEndpointMétodoPermisoDescripciónBody (JSON)/api/auth/loginPOSTPúblicoLogin de usuario (Retorna Token JWT){"email": "admin@gmail.com", "password": "123456"}/api/auth/registerPOSTPúblicoRegistro automático de cliente nuevo{"fullName": "Juan Perez", "email": "juan@gmail.com", "password": "123456", "role": "CLIENT"}/api/admin/usersPOSTADMINCrea un usuario interno (EMPLOYEE o ADMIN){"fullName": "Fabian", "email": "fabian@gmail.com", "password": "...", "role": "EMPLOYEE"}/api/admin/usersGETADMINLista todos los usuarios en el sistemaNinguno🏢 2. Gestión de Negocios y RecursosEndpointMétodoPermisoDescripción/api/businessesPOSTADMINCrea un nuevo establecimiento comercial/api/businessesGETADMINLista todos los negocios registrados de forma global/api/businesses/{id}PUT/DELETEADMINActualiza o da de baja un negocio existente📊 3. Módulo Analítico y KPIs (Dashboard)EndpointMétodoPermisoDescripciónParámetros/api/reports/statsGETADMIN / EMPLOYEERetorna las métricas unificadas del mes actual para las tarjetas de KPIs?month=6 (Opcional)/api/reports/charts/monthlyGETADMINRetorna el consolidado histórico para la gráfica lineal de flujo de reservasNinguno📅 4. Módulo de ReservasEscenarioMétodoEndpointPermisoResultado EsperadoCrear ReservaPOST/api/reservationsCLIENT / EMPLOYEE201 Created (Asignada a estado PENDING por defecto)Filtro de PrivacidadGET/api/reservationsCLIENT200 OK (Retorna únicamente las reservas asociadas a su cuenta)Auditoría GlobalGET/api/reservationsADMIN200 OK (Retorna la totalidad de reservas del sistema en la tabla)Reserva SolapadaPOST/api/reservationsCLIENT400 Bad Request o 409 Conflict (Error por conflicto de horario)🛠️ Requisitos de Instalación y Despliegue Local⚙️ Prerrequisitos GlobalesAntes de iniciar, debes tener instalado en tu máquina:Java JDK 17 o superiorNode.js (versión 18 o superior)Un gestor de Base de Datos Relacional compatible con tu configuración.🟢 Configuración del Backend (multireserve)Navega hacia el directorio del servidor desde tu terminal:Bashcd multireserve
-Configura las credenciales de tu base de datos y llaves JWT editando las propiedades:Plaintextsrc/main/resources/application.properties
-Compila el proyecto e instala todas las dependencias declaradas utilizando el Wrapper de Maven:En Windows: mvnw.cmd clean installEn Linux/Mac: ./mvnw clean installLevanta el servidor de desarrollo:En Windows: mvnw.cmd spring-boot:runEn Linux/Mac: ./mvnw clean spring-boot:runEl backend estará disponible por defecto escuchando en el puerto: http://localhost:8080🔵 Configuración del Frontend (reservas-web)Abre una nueva ventana de la terminal y navega hacia el directorio de la interfaz web:Bashcd reservas-web
-Instala la suite completa de dependencias de Node estructuradas en el proyecto:Bashnpm install
-Configura las variables de entorno locales creando un archivo .env en la raíz de esta carpeta:PlaintextVITE_API_BASE_URL=http://localhost:8080
-Inicia el servidor de desarrollo en modo local:Bashnpm run dev
-Abre tu navegador e ingresa a la dirección asignada por Vite (habitualmente http://localhost:5173) para interactuar con la plataforma de forma integral.
+```
+
+---
+
+## ☕ 1. Backend API (multireserve)
+
+Servidor empresarial REST robusto desarrollado con Spring Boot 3, Spring Security, JWT y Spring Data JPA para la gestión analítica y segura de espacios y activos.
+
+📂 **Arquitectura en Capas**
+- `config/` → Configuración general de la aplicación, inyección de beans y políticas CORS.
+- `controller/` → Controladores REST que exponen los endpoints estructurados de la API.
+- `dto/` → Data Transfer Objects, usados para transportar datos de manera segura sin exponer directamente las entidades JPA.
+- `entity/` → Entidades relacionales mapeadas con Hibernate (Users, Business, Resource, Reservation).
+- `exception/` → Centralización del manejo global de errores y excepciones personalizadas (@RestControllerAdvice).
+- `repository/` → Interfaces de acceso a datos de alto rendimiento optimizadas con Spring Data JPA.
+- `security/` → Filtros de interceptación (JwtAuthenticationFilter), encriptación de credenciales con BCrypt y reglas en SecurityConfig.
+- `service/` → Lógica del núcleo de negocio, validaciones transaccionales y de disponibilidad horaria.
+
+🔐 **Características Principales del Servidor**
+- Control de Acceso basado en Roles (RBAC).
+- Seguridad a Nivel de Datos (Ownership Security).
+- Validación Anti-Solapamiento de reservas.
+
+---
+
+## ⚛️ 2. Frontend Web (reservas-web)
+
+Aplicación SPA desarrollada con React, TypeScript y Vite, garantizando una experiencia de usuario fluida, tipada y veloz.
+
+📂 **Características Interactivas Avanzadas**
+- Estado Global y Consumo de API con Axios + JWT.
+- Dashboard Analítico con CSS Grid responsivo.
+- Renderizado Condicional y rutas protegidas según rol.
+
+👥 **Control de Accesos y Permisos por Rol**
+- **ADMIN**: KPIs globales, gestión de usuarios, negocios y recursos.
+- **EMPLOYEE**: Métricas de su negocio, gestión de reservas.
+- **CLIENT**: Catálogo público, creación y cancelación de reservas propias.
+
+---
+
+## 📋 Endpoints y Guía de Pruebas
+
+🔐 **Autenticación y Cuentas**
+- `POST /api/auth/login` → Login de usuario (JWT).
+- `POST /api/auth/register` → Registro automático de cliente.
+- `POST /api/admin/users` → Crear usuario interno (EMPLOYEE/ADMIN).
+- `GET /api/admin/users` → Listar todos los usuarios.
+
+🏢 **Gestión de Negocios y Recursos**
+- `POST /api/businesses` → Crear negocio.
+- `GET /api/businesses` → Listar negocios.
+- `PUT/DELETE /api/businesses/{id}` → Actualizar/eliminar negocio.
+
+📊 **Módulo Analítico y KPIs (Dashboard)**
+- `GET /api/reports/stats` → KPIs del mes actual (?month=6 opcional).
+- `GET /api/reports/charts/monthly` → Histórico mensual de reservas.
+
+📅 **Módulo de Reservas**
+- `POST /api/reservations` → Crear reserva (CLIENT/EMPLOYEE).
+- `GET /api/reservations` → Listar reservas (CLIENT ve solo las suyas, ADMIN todas).
+- Validación anti-solapamiento con errores 400/409.
+
+---
+
+## 🛠️ Requisitos de Instalación y Despliegue Local
+
+⚙️ **Prerrequisitos**
+- Java JDK 17+
+- Node.js 18+
+- Base de Datos Relacional
+
+🟢 **Backend (multireserve)**
+```bash
+cd multireserve
+# Configura application.properties
+./mvnw clean install
+./mvnw spring-boot:run
+```
+Disponible en: `http://localhost:8080`
+
+🔵 **Frontend (reservas-web)**
+```bash
+cd reservas-web
+npm install
+# Configura .env
+VITE_API_BASE_URL=http://localhost:8080
+npm run dev
+```
+Disponible en: `http://localhost:5173`
+```
+
