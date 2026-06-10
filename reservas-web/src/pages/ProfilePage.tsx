@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { User, Mail, Shield, ShieldAlert, ShieldCheck, Edit3, Save, X, Loader2 } from "lucide-react";
 import toast from "react-hot-toast";
@@ -12,14 +12,6 @@ export default function ProfilePage() {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [isSaving, setIsSaving] = useState(false);
-
-  // Sincronizar estados locales cuando el usuario cambia o se carga el contexto
-  useEffect(() => {
-    if (user) {
-      setFullName(user.fullName);
-      setEmail(user.email);
-    }
-  }, [user]);
 
   // Pantalla de carga segura
   if (!user) {
@@ -72,7 +64,7 @@ export default function ProfilePage() {
       await updateUser(fullName, email);
       toast.success("¡Perfil actualizado con éxito!");
       setIsEditing(false);
-    } catch (error) {
+    } catch {
       toast.error("Error al actualizar los datos en el servidor.");
     } finally {
       setIsSaving(false);
@@ -87,26 +79,27 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="p-6 md:p-10 max-w-2xl mx-auto space-y-8 min-h-screen text-white font-sans" style={{ backgroundColor: '#09090b', color: '#ffffff' }}>
+    <div className="min-h-screen bg-[#09090b] px-4 py-6 text-white sm:px-6 md:px-10 md:py-10">
+      <div className="mx-auto flex w-full max-w-3xl flex-col gap-8">
       
       {/* ─── ENCABEZADO CON BOTÓN INTERACTIVO CORREGIDO ─── */}
-      <div className="border-b border-zinc-800/60 pb-6 mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4" style={{ borderBottom: '1px solid #27272a' }}>
-        <div className="space-y-2">
-          <div className="flex items-center gap-3" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div className="p-2 bg-zinc-900 rounded-xl border border-zinc-800" style={{ backgroundColor: '#18181b', padding: '8px', borderRadius: '12px', border: '1px solid #27272a' }}>
+      <div className="flex flex-col justify-between gap-5 border-b border-zinc-800/70 pb-6 sm:flex-row sm:items-center" style={{ borderBottom: '1px solid #27272a' }}>
+        <div className="space-y-3">
+          <div className="flex items-center gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-zinc-800 bg-zinc-900">
               <User className="text-blue-500" size={20} style={{ color: '#3b82f6' }} />
             </div>
-            <h1 className="text-2xl font-extrabold text-white tracking-tight" style={{ fontSize: '1.75rem', fontWeight: 800 }}>
+            <h1 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl" style={{ fontSize: '1.75rem', fontWeight: 800 }}>
               Mi Perfil
             </h1>
           </div>
-          <p className="text-zinc-400 text-xs sm:text-sm" style={{ color: '#a1a1aa', marginTop: '4px' }}>
+          <p className="max-w-2xl text-sm leading-6 text-zinc-400" style={{ color: '#a1a1aa' }}>
             Gestiona y visualiza la información de tu cuenta con la que accedes al ecosistema MultiReserve.
           </p>
         </div>
 
         {/* 🚀 Contenedor aislado de botones con Keys estables para blindar el DOM virtual */}
-        <div className="flex items-center">
+        <div className="flex items-center self-start sm:self-auto">
           {!isEditing ? (
             <button
               key="btn-editar-datos"
@@ -134,13 +127,13 @@ export default function ProfilePage() {
       </div>
 
       {/* ─── FORMULARIO / TARJETA CONTENEDORA DE CREDENCIALES ─── */}
-      <form onSubmit={handleSave} className="bg-[#121214] border border-zinc-800/60 rounded-2xl p-6 shadow-2xl relative overflow-hidden"
+      <form onSubmit={handleSave} className="relative overflow-hidden rounded-3xl border border-zinc-800/70 bg-[#121214] p-6 shadow-2xl sm:p-8"
             style={{ backgroundColor: '#121214', border: '1px solid #27272a', borderRadius: '16px', padding: '24px', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.5)' }}>
         
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        <div className="flex flex-col gap-6" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           
           {/* Campo: Nombre Completo */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+          <div className="flex flex-col gap-2" style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
             <label style={{ fontSize: '11px', color: '#71717a', textTransform: 'uppercase', fontWeight: 'bold', letterSpacing: '0.05em' }}>
               Nombre de Usuario
             </label>
@@ -161,7 +154,7 @@ export default function ProfilePage() {
                 disabled={!isEditing}
                 value={isEditing ? fullName : user.fullName}
                 onChange={(e) => setFullName(e.target.value)}
-                placeholder="Nombre de usuario"
+                placeholder="Ej: Mariana López"
                 className="w-full bg-transparent border-none outline-none p-0 focus:ring-0"
                 style={{ 
                   fontSize: '14px', 
@@ -177,7 +170,7 @@ export default function ProfilePage() {
           </div>
 
           {/* Campo: Correo Electrónico */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+          <div className="flex flex-col gap-2" style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
             <label style={{ fontSize: '11px', color: '#71717a', textTransform: 'uppercase', fontWeight: 'bold', letterSpacing: '0.05em' }}>
               Dirección de Correo
             </label>
@@ -198,7 +191,7 @@ export default function ProfilePage() {
                 disabled={!isEditing}
                 value={isEditing ? email : user.email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="correo@ejemplo.com"
+                placeholder="Ej: mariana@multireserve.com"
                 className="w-full bg-transparent border-none outline-none p-0 focus:ring-0"
                 style={{ 
                   fontSize: '14px', 
@@ -214,7 +207,7 @@ export default function ProfilePage() {
           </div>
 
           {/* Campo: Nivel de Acceso / Rol (Lectura Única Siempre) */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+          <div className="flex flex-col gap-2" style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
             <label style={{ fontSize: '11px', color: '#71717a', textTransform: 'uppercase', fontWeight: 'bold', letterSpacing: '0.05em' }}>
               Nivel de Autorización (Rol)
             </label>
@@ -266,6 +259,7 @@ export default function ProfilePage() {
         </div>
 
       </form>
+      </div>
     </div>
   );
 }
