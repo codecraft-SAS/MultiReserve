@@ -106,6 +106,8 @@ public class BusinessController {
     }
 
     @GetMapping("/search")
+    // Ejemplo: /api/businesses/search?keyword=pizza
+    // Busca en nombre y descripción
     public List<BusinessResponse> searchByName(@RequestParam String keyword) {
         return service.searchByName(keyword);
     }
