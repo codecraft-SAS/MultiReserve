@@ -7,6 +7,7 @@ import {
   CalendarCheck,
   BarChart3,
   LogOut,
+  User,
 } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
@@ -20,13 +21,12 @@ export default function Sidebar({ isOpen }: SidebarProps) {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Estado para manejar el hover de los botones del menú de forma individual
   const [hoveredPath, setHoveredPath] = useState<string | null>(null);
   const [logoutHover, setLogoutHover] = useState(false);
 
   if (!user) return null;
 
-  // Configuración de menús alineada con las rutas de la app
+  // 🛠️ CONFIGURACIÓN DE MENÚS CORREGIDA: Ahora todos los roles tienen acceso a su perfil oficial
   const menuConfig = {
     ADMIN: [
       { name: "Dashboard", path: "/admin/dashboard", icon: <LayoutDashboard size={18} /> },
@@ -35,22 +35,23 @@ export default function Sidebar({ isOpen }: SidebarProps) {
       { name: "Recursos", path: "/admin/resources", icon: <Layers size={18} /> },
       { name: "Reservas", path: "/admin/reservations", icon: <CalendarCheck size={18} /> },
       { name: "Reportes", path: "/admin/reports", icon: <BarChart3 size={18} /> },
+      { name: "Mi Perfil", path: "/admin/profile", icon: <User size={18} /> }, // ◄ ¡Añadido!
     ],
     EMPLOYEE: [
       { name: "Dashboard", path: "/employee/dashboard", icon: <LayoutDashboard size={18} /> },
       { name: "Recursos", path: "/employee/resources", icon: <Layers size={18} /> },
       { name: "Reservas", path: "/employee/reservations", icon: <CalendarCheck size={18} /> },
+      { name: "Mi Perfil", path: "/employee/profile", icon: <User size={18} /> }, // ◄ ¡Añadido!
     ],
     CLIENT: [
-      { name: "Catálogo", path: "/client/catalog", icon: <Store size={18} /> },
+      { name: "Buscar Locales", path: "/client/catalog", icon: <Store size={18} /> },
       { name: "Mis Reservas", path: "/client/my-reservations", icon: <CalendarCheck size={18} /> },
-      { name: "Mi Perfil", path: "/client/profile", icon: <Users size={18} /> },
+      { name: "Mi Perfil", path: "/client/profile", icon: <User size={18} /> },
     ],
   };
 
   const menu = menuConfig[user.role as keyof typeof menuConfig] || [];
 
-  // Estilos dinámicos para los Badges según el rol
   const getRoleBadgeStyles = (role: string) => {
     switch (role) {
       case "ADMIN":
@@ -65,7 +66,7 @@ export default function Sidebar({ isOpen }: SidebarProps) {
   return (
     <aside
       style={{
-        backgroundColor: "#111111", // Fondo ultra oscuro sólido
+        backgroundColor: "#111111",
         borderRight: "1px solid rgba(255, 255, 255, 0.04)",
         display: "flex",
         flexDirection: "column",
@@ -79,12 +80,11 @@ export default function Sidebar({ isOpen }: SidebarProps) {
       }}
     >
       <div>
-        {/* ─── LOGO HEADER ─── */}
+        {/* LOGO HEADER */}
         <div style={{ padding: "24px", borderBottom: "1px solid rgba(255, 255, 255, 0.03)", boxSizing: "border-box" }}>
           <h1 style={{ fontSize: "22px", fontWeight: 900, color: "#2563eb", margin: 0, letterSpacing: "-0.5px" }}>
             Multi<span style={{ color: "#ffffff", fontWeight: 300, fontSize: "18px" }}>reserve</span>
           </h1>
-
           <div 
             style={{
               marginTop: "12px",
@@ -98,11 +98,11 @@ export default function Sidebar({ isOpen }: SidebarProps) {
               ...getRoleBadgeStyles(user.role)
             }}
           >
-            {user.role}
+            {user.role === "CLIENT" ? "Cliente Final" : user.role}
           </div>
         </div>
 
-        {/* ─── CUERPO DEL MENÚ DE NAVEGACIÓN ─── */}
+        {/* NAVEGACIÓN DINÁMICA */}
         <nav style={{ padding: "12px", display: "flex", flexDirection: "column", gap: "4px", boxSizing: "border-box" }}>
           {menu.map((item) => {
             const active = location.pathname === item.path;
@@ -152,7 +152,7 @@ export default function Sidebar({ isOpen }: SidebarProps) {
         </nav>
       </div>
 
-      {/* ─── PIE DEL SIDEBAR (CERRAR SESIÓN) ─── */}
+      {/* PIE DEL SIDEBAR */}
       <div style={{ borderTop: "1px solid rgba(255, 255, 255, 0.03)", padding: "12px", boxSizing: "border-box" }}>
         <button
           onClick={() => {
@@ -183,7 +183,6 @@ export default function Sidebar({ isOpen }: SidebarProps) {
           </div>
           <span style={{ whiteSpace: "nowrap" }}>Cerrar sesión</span>
         </button>
-
         <p style={{ textAlign: "center", fontSize: "10px", color: "#3f3f46", marginTop: "16px", marginBottom: "4px", fontFamily: "monospace", letterSpacing: "0.5px" }}>
           MultiReserve v1.0
         </p>

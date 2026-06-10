@@ -1,91 +1,108 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import toast from "react-hot-toast";
-
-// Definición interna de la estructura de una reserva para consistencia del Hook
-interface Reservation {
-  id: number;
-  businessName?: string; // Usado por el cliente
-  clientName?: string;   // Usado por el empleado
-  clientEmail?: string;  // Usado por el empleado
-  resourceName: string;
-  resourceType: string;
-  city?: string;
-  date: string;
-  startTime: string;
-  endTime: string;
-  status: "PENDING" | "CONFIRMED" | "CANCELLED";
-  pricePaid?: number;
-}
+import type { Reservation } from "../types/Reservation";
+import { 
+  getReservations, 
+  createReservation, 
+  cancelReservation, 
+  changeReservationStatus 
+} from "../services/reservationService";
 
 export const useReservations = () => {
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Función para obtener las reservas desde la API de Spring Boot
-  const fetchReservations = async () => {
+  // Función para obtener las reservas (Ownership Security: Clientes solo ven las suyas)
+  const fetchReservations = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
-      
-      // NOTA: Si manejas endpoints separados (ej: /my-reservations o /admin/reservations),
-      // puedes unificarlo o ajustar la ruta según las necesidades de tu sistema de autenticación JWT.
-      const response = await fetch("http://localhost:8080/api/reservations", {
-        headers: {
-          // Si ya estás usando almacenamiento de JWT, descomenta la línea de abajo:
-          // "Authorization": `Bearer ${localStorage.getItem("token")}`
-          "Content-Type": "application/json"
-        }
-      });
-      
-      if (!response.ok) throw new Error("Error al obtener el listado de reservas");
-      
-      const data = await response.json();
+      const data = await getReservations();
       setReservations(data);
     } catch (err: any) {
-      setError(err.message);
-      toast.error("No se pudieron cargar las reservas");
+      const errMsg = err.response?.data?.message || "No se pudieron cargar las reservas.";
+      setError(errMsg);
+      toast.error(errMsg);
     } finally {
       setLoading(false);
     }
+  }, []);
+
+  // MÓDULO CLIENTE: Crear una nueva reserva con validación estricta de DTO de Spring Boot
+  const createNewReservation = async (reservationData: {
+    resourceId: number;
+    resourceName: string;       // 🌟 Añadido para cumplir con @NotBlank de Java
+    resourceType: string;       // 🌟 Añadido para cumplir con @NotNull de Java
+    customerName: string;       // 🌟 Añadido para cumplir con @NotBlank de Java
+    reservationDate: string;    // 🌟 Añadido para cumplir con @NotNull de Java (YYYY-MM-DD)
+    startTime: string;          // Formato ISO string para LocalDateTime
+    endTime: string;            // Formato ISO string para LocalDateTime
+    purpose?: string;
+    // 💳 NUEVOS CAMPOS DE PAGO INTEGRADOS:
+    amountPaid: number;
+    paymentMethod: string;
+  }) => {
+    try {
+      setError(null);
+      const newRes = await createReservation(reservationData);
+      setReservations((prev) => [newRes, ...prev]);
+      toast.success("¡Reserva solicitada con éxito!");
+      return { success: true, data: newRes };
+    } catch (err: any) {
+      // Captura los códigos 400 y 409 de excepciones controladas de Spring Boot (Double-booking, error de abono, etc.)
+      const backendMessage = err.response?.data?.message || "Error al procesar el pago o la reserva.";
+      setError(backendMessage);
+      toast.error(backendMessage);
+      return { success: false, error: backendMessage };
+    }
   };
 
-  // Función mutadora para cambiar el estado (Aprobar / Cancelar / Rechazar)
-  const updateReservationStatus = async (id: number, nextStatus: "CONFIRMED" | "CANCELLED") => {
+  // MÓDULO CLIENTE: Cancelación autónoma si está en estado PENDING
+  const cancelExistingReservation = async (id: number) => {
     try {
-      // Petición PATCH apuntando al controlador operativo de tu backend
-      const response = await fetch(`http://localhost:8080/api/reservations/${id}/status`, {
-        method: "PATCH",
-        headers: { 
-          "Content-Type": "application/json",
-          // "Authorization": `Bearer ${localStorage.getItem("token")}`
-        },
-        body: JSON.stringify({ status: nextStatus }),
-      });
+      setError(null);
+      await cancelReservation(id);
+      setReservations((prev) =>
+        prev.map((res) => (res.id === id ? { ...res, status: "CANCELLED" } : res))
+      );
+      toast.success("Reserva cancelada correctamente.");
+      return true;
+    } catch (err: any) {
+      const backendMessage = err.response?.data?.message || "No se pudo cancelar la reserva.";
+      toast.error(backendMessage);
+      return false;
+    }
+  };
 
-      if (!response.ok) throw new Error("No se pudo actualizar el estado en el servidor");
-
-      // Optimización en memoria: actualiza el estado local inmediatamente sin recargar todo de la API
+  // MÓDULO EMPLEADO / ADMIN: Mutador de estados operativos (Confirmar/Rechazar/Completar)
+  const updateReservationStatus = async (id: number, nextStatus: "CONFIRMED" | "CANCELLED" | "REJECTED" | "COMPLETED") => {
+    try {
+      setError(null);
+      await changeReservationStatus(id, nextStatus);
       setReservations((prev) =>
         prev.map((res) => (res.id === id ? { ...res, status: nextStatus } : res))
       );
-      
+      toast.success(`Reserva marcada como ${nextStatus.toLowerCase()}`);
     } catch (err: any) {
+      const backendMessage = err.response?.data?.message || "Error al actualizar el estado de la reserva.";
+      toast.error(backendMessage);
       console.error("Error en updateReservationStatus:", err);
-      throw err; // Re-lanzamos el error para que el 'toast.error' del componente lo capture
     }
   };
 
   // Carga inicial automática al montar el componente
   useEffect(() => {
     fetchReservations();
-  }, []);
+  }, [fetchReservations]);
 
-  return { 
-    reservations, 
-    loading, 
-    error, 
-    updateReservationStatus, 
-    refresh: fetchReservations 
+  return {
+    reservations,
+    loading,
+    error,
+    createNewReservation,
+    cancelExistingReservation,
+    updateReservationStatus,
+    refresh: fetchReservations
   };
 };

@@ -31,7 +31,7 @@ interface Business {
   active: boolean;
 }
 
-export default function BusinessManagement() {
+export default function ManageBusinesses() {
   const navigate = useNavigate();
 
   // Estados de control de datos y carga
@@ -43,6 +43,22 @@ export default function BusinessManagement() {
   const [searchTerm, setSearchTerm] = useState("");
   const [createHover, setCreateHover] = useState(false);
   const [actionHover, setActionHover] = useState<{ id: number; btn: string } | null>(null);
+
+  // Inyectar estilos para la animación del loader si no usas Tailwind
+  useEffect(() => {
+    if (!document.getElementById("spinner-style")) {
+      const style = document.createElement("style");
+      style.id = "spinner-style";
+      style.innerHTML = `
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+        .custom-spin { animation: spin 1s linear infinite; }
+      `;
+      document.head.appendChild(style);
+    }
+  }, []);
 
   // =====================================================================
   // EFECTO: Carga de negocios reales desde el Backend
@@ -169,17 +185,17 @@ export default function BusinessManagement() {
         </button>
       </div>
 
-      {/* ─── BARRA DE BÚSQUEDA INTEGRAL CON DISEÑO RECURSOS ─── */}
+      {/* ─── BARRA DE BÚSQUEDA ─── */}
       <div style={{ position: "relative", display: "flex", alignItems: "center", width: "100%" }}>
         <Search size={18} style={{ position: "absolute", left: "16px", color: "#52525b" }} />
         <input
           type="text"
-          placeholder="Buscar por recurso o nombre del establecimiento socio..."
+          placeholder="Filtro integrado de establecimientos comerciales activos..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           style={{
             width: "100%",
-            backgroundColor: "rgba(23, 23, 23, 0.2)",
+            backgroundColor: "rgba(23, 23, 23, 0.4)",
             border: "1px solid rgba(255, 255, 255, 0.05)",
             borderRadius: "12px",
             padding: "14px 14px 14px 48px",
@@ -195,7 +211,7 @@ export default function BusinessManagement() {
       {/* ─── ESTADOS DE CARGA O ERROR ─── */}
       {loading ? (
         <div style={{ display: "flex", flexDirection: "column", gap: "12px", alignItems: "center", justifyContent: "center", padding: "80px 20px" }}>
-          <Loader2 size={36} className="animate-spin" style={{ color: "#2563eb" }} />
+          <Loader2 size={36} className="custom-spin" style={{ color: "#2563eb" }} />
           <p style={{ color: "#a1a1aa", fontSize: "14px", margin: 0 }}>Consultando base de datos de MultiReserve...</p>
         </div>
       ) : error ? (
@@ -208,7 +224,7 @@ export default function BusinessManagement() {
           No se encontraron establecimientos que coincidan con la búsqueda.
         </div>
       ) : (
-        /* ─── GRILLA DE TARJETAS IDÉNTICA A RECURSOS ─── */
+        /* ─── GRILLA DE TARJETAS ─── */
         <div style={{ 
           display: "grid", 
           gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))", 

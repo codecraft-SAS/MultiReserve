@@ -15,8 +15,7 @@ import RegisterPage from "./pages/RegisterPage";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import ManageBusinesses from "./pages/admin/ManageBusinesses";
 import CreateBusinessForm from "./pages/admin/CreateBusinessForm";
-/* 🏢 1. IMPORTA TU FORMULARIO DE EDICIÓN AQUÍ */
-import EditBusinessForm from "./pages/admin/EditBusinessForm"; // ◄ Cambia el nombre si tu archivo se llama diferente
+import EditBusinessForm from "./pages/admin/EditBusinessForm"; 
 import CreateResourceForm from "./pages/admin/CreateResourceForm";
 import UserManagement from "./pages/admin/UserManagement"; 
 import ReportsManagement from "./pages/admin/ReportsManagement"; 
@@ -28,9 +27,10 @@ import ReservationManagement from "./pages/ReservationManagement";
 // Páginas de EMPLEADO
 import EmployeePanel from "./pages/EmployeePanel"; 
 
-// Páginas de CLIENTE
+// Páginas de CLIENTE e Interfaz General de Cuenta
 import BusinessCatalog from "./pages/BusinessCatalog";
 import ClientReservations from "./pages/ClientReservations";
+import ProfilePage from "./pages/ProfilePage"; // ◄ Perfil importado correctamente
 
 function App() {
   return (
@@ -52,8 +52,6 @@ function App() {
             <Route path="dashboard" element={<AdminDashboard />} />
             <Route path="businesses" element={<ManageBusinesses />} />
             <Route path="create-business" element={<CreateBusinessForm />} />
-            
-            {/* 🏢 2. AGREGA LA RUTA DE EDICIÓN AQUÍ */}
             <Route path="edit-business/:id" element={<EditBusinessForm />} /> 
 
             {/* Rutas de control operativo, personal y estadísticas */}
@@ -62,6 +60,9 @@ function App() {
             <Route path="reservations" element={<ReservationManagement />} />
             <Route path="users" element={<UserManagement />} /> 
             <Route path="reports" element={<ReportsManagement />} /> 
+            
+            {/* Ruta añadida para el perfil del Administrador */}
+            <Route path="profile" element={<ProfilePage />} /> 
           </Route>
         </Route>
 
@@ -69,6 +70,9 @@ function App() {
         <Route element={<PrivateRoute allowedRoles={['EMPLOYEE']} />}>
           <Route path="/employee" element={<MainLayout />}>
             <Route path="dashboard" element={<EmployeePanel />} />
+            
+            {/* Ruta añadida para el perfil del Empleado */}
+            <Route path="profile" element={<ProfilePage />} /> 
           </Route>
         </Route>
 
@@ -77,6 +81,9 @@ function App() {
           <Route path="/client" element={<MainLayout />}>
             <Route path="catalog" element={<BusinessCatalog />} />
             <Route path="my-reservations" element={<ClientReservations />} />
+            
+            {/* Ruta añadida para el perfil del Cliente */}
+            <Route path="profile" element={<ProfilePage />} /> 
           </Route>
         </Route>
 

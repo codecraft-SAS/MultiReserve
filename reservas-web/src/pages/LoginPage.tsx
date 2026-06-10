@@ -31,10 +31,17 @@ export default function LoginPage() {
       
       toast.success("¡Bienvenido de nuevo!");
 
-      if (userData?.role === "ADMIN") {
+      // 🌟 CORRECCIÓN DE RUTAS Y ROLES:
+      // Usamos toUpperCase() por seguridad en caso de que el backend devuelva "client" o "admin"
+      const userRole = userData?.role?.toUpperCase();
+
+      if (userRole === "ADMIN") {
         navigate("/admin/dashboard");
+      } else if (userRole === "CLIENT") {
+        navigate("/client/catalog"); // 🌟 Enviado directo al catálogo de clientes corregido
       } else {
-        navigate("/admin/catalog");
+        // Por si tienes roles de empleado u otros
+        navigate("/client/catalog"); 
       }
     } catch (error) {
       console.error(error);
