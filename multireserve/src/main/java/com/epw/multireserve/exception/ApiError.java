@@ -10,7 +10,7 @@ public class ApiError {
 
     public ApiError() {
     }
-
+// Constructor para facilitar creación de objetos ApiError con todos los campos
     public ApiError(
             String message,
             int status,
@@ -20,7 +20,7 @@ public class ApiError {
         this.status = status;
         this.timestamp = timestamp;
     }
-
+// Getters y setters para todos los campos (message, status, timestamp)
     public String getMessage() {
         return message;
     }

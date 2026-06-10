@@ -21,7 +21,7 @@ public class ReservationTagServiceImpl
 
     private final ReservationRepository reservationRepository;
     private final TagRepository tagRepository;
-
+// Constructor para inyección de dependencias
     public ReservationTagServiceImpl(
             ReservationRepository reservationRepository,
             TagRepository tagRepository) {

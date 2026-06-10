@@ -44,14 +44,14 @@ public class AuthServiceImpl implements AuthService {
                 if (repository.existsByEmail(request.getEmail())) {
                         throw new IllegalArgumentException("Email already registered");
                 }
-
+// Por defecto, cualquier usuario que se registre desde la web será CLIENT
                 User user = User.builder()
                                 .fullName(request.getFullName())
                                 .email(request.getEmail())
                                 .password(passwordEncoder.encode(request.getPassword()))
                                 .role(Role.CLIENT) // Por defecto es Cliente
                                 .build();
-
+// Guardar el nuevo usuario en la base de datos
                 repository.save(user);
 
                 String token = jwtService.generateToken(user.getEmail(), user.getRole().name());
@@ -65,11 +65,11 @@ public class AuthServiceImpl implements AuthService {
         public AuthResponse login(LoginRequest request) {
                 User user = repository.findByEmail(request.getEmail())
                                 .orElseThrow(() -> new IllegalArgumentException("Invalid credentials"));
-
+// Validar contraseña usando PasswordEncoder
                 if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
                         throw new IllegalArgumentException("Invalid credentials");
                 }
-
+// Generar token JWT con email y rol del usuario
                 String token = jwtService.generateToken(user.getEmail(), user.getRole().name());
                 return new AuthResponse(token, user.getFullName(), user.getEmail(), user.getRole().name());
         }
