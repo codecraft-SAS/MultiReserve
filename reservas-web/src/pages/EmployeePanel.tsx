@@ -1,55 +1,59 @@
 import { useState } from "react";
-import { useReservations } from "../hooks/useReservations"; 
-import { 
-  Check, 
-  X, 
-  Clock, 
-  CheckCircle2, 
-  XCircle, 
-  Calendar, 
-  User, 
-  Layers, 
-  Inbox
+import { useReservations } from "../hooks/useReservations";
+import type { Reservation } from "../types/Reservation";
+import {
+  Check,
+  X,
+  Clock,
+  CheckCircle2,
+  XCircle,
+  Calendar,
+  User,
+  Layers,
+  Inbox,
+  Store,
+  RefreshCw,
+  ListTodo,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { formatDate } from "../utils/formatDate";
 import { formatCurrency } from "../utils/formatCurrency";
-import { getStatusBadgeStyles, getStatusText } from "../utils/statusColor";
+import { colors, layout, statusBadges, loadingSpinner, emptyState } from "../utils/colors";
 
-// Interfaz adaptada para evitar conflictos con propiedades opcionales del hook
-interface SystemReservation {
-  id: number;
-  clientName?: string; 
-  businessName?: string;
-  resourceName: string;
-  resourceType: string;
-  date: string;
-  startTime: string;
-  endTime: string;
-  status: any; // Usamos any temporalmente para flexibilizar la comparación visual de estados
-  pricePaid?: number;
-}
+const statusLabels: Record<string, string> = {
+  PENDING: "Pendiente",
+  CONFIRMED: "Aprobada",
+  CANCELLED: "Cancelada",
+  REJECTED: "Rechazada",
+  COMPLETED: "Completada",
+};
 
 export default function EmployeePanel() {
-  // ✅ CORRECCIÓN: Extraemos 'updateReservationStatus' que es el nombre real en tu hook
-  const { reservations, loading, updateReservationStatus } = useReservations();
+  const { reservations, loading, updateReservationStatus, refresh } = useReservations();
   const [filterStatus, setFilterStatus] = useState<string>("ALL");
 
   if (loading) {
     return (
-      <div className="flex flex-col justify-center items-center py-24 text-blue-500 gap-3">
-        <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500"></div>
-        <span className="text-sm text-slate-400 font-medium">Cargando panel de gestión...</span>
+      <div style={{ ...loadingSpinner.container, flexDirection: "column", gap: "12px" }}>
+        <div style={loadingSpinner.spinner} />
+        <span style={{ fontSize: "13px", color: colors.textMuted, fontWeight: 500 }}>Cargando panel de gestión...</span>
       </div>
     );
   }
 
-  const filteredReservations = reservations.filter((res: SystemReservation) => {
+  const counts = {
+    total: reservations.length,
+    PENDING: reservations.filter((r: Reservation) => r.status === "PENDING").length,
+    CONFIRMED: reservations.filter((r: Reservation) => r.status === "CONFIRMED").length,
+    COMPLETED: reservations.filter((r: Reservation) => r.status === "COMPLETED").length,
+    CANCELLED: reservations.filter((r: Reservation) => r.status === "CANCELLED" || r.status === "REJECTED").length,
+  };
+
+  const filteredReservations = reservations.filter((res: Reservation) => {
     if (filterStatus === "ALL") return true;
     return res.status === filterStatus;
   });
 
-  // ✅ CORRECCIÓN: Sintaxis '=>' arreglada y mapeo de estados correcto para el backend ("CONFIRMED" / "CANCELLED")
   const handleAction = async (id: number, status: "CONFIRMED" | "CANCELLED") => {
     try {
       await updateReservationStatus(id, status);
@@ -59,131 +63,214 @@ export default function EmployeePanel() {
     }
   };
 
+  const kpiCard = (label: string, value: number, color: string, icon: React.ReactNode) => (
+    <div style={{
+      backgroundColor: colors.bgCard,
+      border: `1px solid ${colors.border}`,
+      borderRadius: "12px",
+      padding: "16px 20px",
+      display: "flex",
+      alignItems: "center",
+      gap: "14px",
+    }}>
+      <div style={{ color, display: "flex", alignItems: "center" }}>{icon}</div>
+      <div>
+        <div style={{ fontSize: "22px", fontWeight: 700, color: colors.textPrimary, lineHeight: 1.2 }}>{value}</div>
+        <div style={{ fontSize: "12px", color: colors.textMuted, fontWeight: 500 }}>{label}</div>
+      </div>
+    </div>
+  );
+
   return (
-    <div className="space-y-8">
-      {/* Encabezado */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-4xl font-extrabold text-white tracking-tight flex items-center gap-3">
-            Panel de Control <span className="text-xs font-bold uppercase px-2.5 py-1 bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded-md tracking-widest">Colaborador</span>
-          </h1>
-          <p className="text-slate-400 mt-2 text-sm">
+    <div style={{ ...layout.page, gap: "28px" }}>
+      {/* Header */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "16px" }}>
+        <div style={layout.header}>
+          <div style={layout.headerRow}>
+            <h1 style={{ ...layout.title, fontSize: "32px" }}>
+              Panel de Control
+            </h1>
+            <span style={{
+              fontSize: "11px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em",
+              padding: "4px 10px", borderRadius: "6px",
+              backgroundColor: "rgba(59, 130, 246, 0.1)", color: colors.info, border: "1px solid rgba(59, 130, 246, 0.2)"
+            }}>
+              Colaborador
+            </span>
+          </div>
+          <p style={layout.description}>
             Gestiona, aprueba o rechaza las solicitudes de reserva asignadas a tu establecimiento en tiempo real.
           </p>
         </div>
 
-        {/* Filtros de Estado */}
-        <div className="flex bg-slate-950 p-1 rounded-xl border border-slate-800 self-start sm:self-center">
-          {["ALL", "PENDING", "CONFIRMED", "CANCELLED"].map((status) => (
-            <button
-              key={status}
-              onClick={() => setFilterStatus(status)}
-              className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                filterStatus === status
-                  ? "bg-blue-600 text-white shadow-lg shadow-blue-600/10"
-                  : "text-slate-400 hover:text-slate-200"
-              }`}
-            >
-              {status === "ALL" ? "Todas" : status === "PENDING" ? "Pendientes" : status === "CONFIRMED" ? "Aprobadas" : "Rechazadas"}
-            </button>
-          ))}
-        </div>
+        <button onClick={refresh} title="Actualizar" style={{ display: "inline-flex", alignItems: "center", gap: "6px", backgroundColor: "rgba(37, 99, 235, 0.1)", border: "1px solid rgba(37, 99, 235, 0.25)", borderRadius: "8px", padding: "6px 14px", color: "#3b82f6", fontSize: "13px", fontWeight: 600, cursor: "pointer" }}>
+          <RefreshCw size={13} />
+          Actualizar
+        </button>
       </div>
 
-      {/* Grid de Reservas */}
+      {/* KPIs */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: "12px" }}>
+        {kpiCard("Pendientes", counts.PENDING, colors.warningLight, <Clock size={18} />)}
+        {kpiCard("Aprobadas", counts.CONFIRMED, colors.successLight, <CheckCircle2 size={18} />)}
+        {kpiCard("Completadas", counts.COMPLETED, colors.info, <ListTodo size={18} />)}
+        {kpiCard("Canceladas", counts.CANCELLED, colors.dangerLight, <XCircle size={18} />)}
+      </div>
+
+      {/* Filter tabs */}
+      <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+        {[
+          { key: "ALL", label: "Todas" },
+          { key: "PENDING", label: "Pendientes" },
+          { key: "CONFIRMED", label: "Aprobadas" },
+          { key: "CANCELLED", label: "Canceladas" },
+        ].map((tab) => (
+          <button
+            key={tab.key}
+            onClick={() => setFilterStatus(tab.key)}
+            style={{
+              padding: "8px 18px", borderRadius: "8px", fontSize: "12px", fontWeight: 700,
+              border: filterStatus === tab.key ? "none" : `1px solid ${colors.border}`,
+              cursor: "pointer", transition: "all 0.2s",
+              backgroundColor: filterStatus === tab.key ? colors.primary : "transparent",
+              color: filterStatus === tab.key ? colors.textPrimary : colors.textMuted,
+            }}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Grid */}
       {filteredReservations.length === 0 ? (
-        <div className="text-center py-20 bg-slate-900 border border-slate-800/80 rounded-2xl max-w-xl mx-auto p-8 flex flex-col items-center gap-3 shadow-xl">
-          <Inbox size={44} className="text-slate-600" />
-          <p className="text-lg font-bold text-slate-300">No hay registros</p>
-          <p className="text-sm text-slate-500 max-w-sm">
+        <div style={{ ...emptyState.container, backgroundColor: "transparent", border: `1px solid ${colors.border}`, borderRadius: "16px", maxWidth: "480px", margin: "0 auto" }}>
+          <Inbox size={44} style={emptyState.icon} />
+          <p style={emptyState.title}>No hay registros</p>
+          <p style={emptyState.message}>
             No se encontraron solicitudes de reserva que coincidan con el estado seleccionado.
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredReservations.map((res: SystemReservation) => (
-            <div
-              key={res.id}
-              className="bg-slate-900 border border-slate-800/80 rounded-2xl shadow-xl p-6 flex flex-col justify-between gap-5 relative overflow-hidden group hover:border-slate-700/80 transition-all duration-300"
-            >
-              {/* Top info */}
-              <div className="flex justify-between items-start gap-4">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2 text-sm font-bold text-white group-hover:text-blue-400 transition-colors">
-                    <User size={14} className="text-slate-500" />
-                    <span>{res.clientName || "Cliente Registrado"}</span>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(360px, 1fr))", gap: "24px" }}>
+          {filteredReservations.map((res: Reservation) => {
+            const badge = statusBadges[res.status];
+            return (
+              <div
+                key={res.id}
+                style={{
+                  backgroundColor: colors.glass,
+                  border: "1px solid rgba(255, 255, 255, 0.04)",
+                  borderRadius: "16px",
+                  padding: "24px",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "16px",
+                  position: "relative",
+                  overflow: "hidden",
+                }}
+              >
+                {/* Top row */}
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "16px" }}>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      <User size={14} style={{ color: colors.textDim }} />
+                      <span style={{ fontSize: "14px", fontWeight: 700, color: colors.textPrimary }}>
+                        {res.customerName || "Cliente Registrado"}
+                      </span>
+                    </div>
+                    <span style={{ fontSize: "11px", color: colors.textDimmer, fontWeight: 500 }}>Reserva ID: #{res.id}</span>
                   </div>
-                  <p className="text-slate-500 text-[11px] font-medium">Reserva ID: #{res.id}</p>
-                </div>
-                <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${getStatusBadgeStyles(res.status)}`}>
-                  {getStatusText(res.status)}
-                </span>
-              </div>
-
-              {/* Detalles */}
-              <div className="bg-slate-950/50 border border-slate-800/40 rounded-xl p-4 space-y-3">
-                <div className="flex items-center gap-2 text-sm font-medium text-slate-200">
-                  <Layers size={16} className="text-blue-500" />
-                  <span>{res.resourceName}</span>
-                  <span className="text-xs px-2 py-0.5 rounded bg-slate-800 text-slate-400 font-normal">
-                    {res.resourceType === "COURT" ? "Cancha" : res.resourceType === "TABLE" ? "Mesa" : "Salón"}
+                  <span style={badge}>
+                    <span style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: badge.color }} />
+                    {statusLabels[res.status] || res.status}
                   </span>
                 </div>
 
-                <div className="pt-2 border-t border-slate-800/60 grid grid-cols-2 gap-3 text-xs text-slate-400 font-medium">
-                  <div className="flex items-center gap-1.5">
-                    <Calendar size={14} className="text-slate-500" />
-                    <span>{formatDate(res.date)}</span>
+                {/* Details */}
+                <div style={{
+                  backgroundColor: "rgba(0, 0, 0, 0.2)",
+                  border: `1px solid ${colors.borderSubtle}`,
+                  borderRadius: "12px",
+                  padding: "16px",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "12px"
+                }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <Layers size={16} style={{ color: colors.primaryLight, flexShrink: 0 }} />
+                    <span style={{ fontSize: "14px", fontWeight: 500, color: colors.textSecondary }}>{res.resourceName}</span>
                   </div>
-                  <div className="flex items-center gap-1.5">
-                    <Clock size={14} className="text-slate-500" />
-                    <span>{res.startTime} - {res.endTime}</span>
+
+                  {res.businessName && (
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      <Store size={14} style={{ color: colors.textDim, flexShrink: 0 }} />
+                      <span style={{ fontSize: "13px", color: colors.textMuted }}>{res.businessName}</span>
+                    </div>
+                  )}
+
+                  <div style={{ borderTop: `1px solid ${colors.divider}`, paddingTop: "12px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", fontSize: "13px", color: colors.textMuted }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                      <Calendar size={14} style={{ color: colors.textDim }} />
+                      <span>{formatDate(res.reservationDate)}</span>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                      <Clock size={14} style={{ color: colors.textDim }} />
+                      <span>{res.startTime} - {res.endTime}</span>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Acciones o Footer */}
-              <div className="flex items-center justify-between pt-1 border-t border-slate-800/40 mt-1">
-                <div className="text-xs text-slate-400 font-medium">
-                  Monto: <span className="text-white font-bold">{formatCurrency(res.pricePaid || 0)}</span>
+                {/* Footer */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", borderTop: `1px solid ${colors.divider}`, paddingTop: "12px" }}>
+                  <div style={{ fontSize: "13px", color: colors.textMuted }}>
+                    Monto: <span style={{ color: colors.textPrimary, fontWeight: 700 }}>{formatCurrency(res.amount || 0)}</span>
+                  </div>
+
+                  {res.status === "PENDING" ? (
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      <button
+                        onClick={() => handleAction(res.id, "CANCELLED")}
+                        title="Rechazar solicitud"
+                        style={{
+                          padding: "8px", borderRadius: "10px", border: `1px solid ${colors.border}`,
+                          backgroundColor: colors.bgApp, color: colors.textMuted, cursor: "pointer",
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                        }}
+                      >
+                        <X size={14} />
+                      </button>
+                      <button
+                        onClick={() => handleAction(res.id, "CONFIRMED")}
+                        style={{
+                          display: "flex", alignItems: "center", gap: "6px",
+                          padding: "8px 12px", borderRadius: "10px", border: "none",
+                          backgroundColor: colors.primary, color: colors.textPrimary, cursor: "pointer",
+                          fontSize: "12px", fontWeight: 700,
+                        }}
+                      >
+                        <Check size={14} />
+                        <span>Aprobar</span>
+                      </button>
+                    </div>
+                  ) : (
+                    <div style={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "11px", fontWeight: 600, color: colors.textDim }}>
+                      {res.status === "CONFIRMED" || res.status === "COMPLETED" ? (
+                        <>
+                          <CheckCircle2 size={12} style={{ color: colors.successLight }} />
+                          <span style={{ color: colors.successLight }}>Aceptada</span>
+                        </>
+                      ) : (
+                        <>
+                          <XCircle size={12} style={{ color: colors.danger }} />
+                          <span style={{ color: colors.danger }}>Cancelada</span>
+                        </>
+                      )}
+                    </div>
+                  )}
                 </div>
-
-                {res.status === "PENDING" ? (
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => handleAction(res.id, "CANCELLED")}
-                      className="p-2 bg-slate-950 border border-slate-800 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 hover:border-rose-500/20 rounded-xl transition-all"
-                      title="Rechazar solicitud"
-                    >
-                      <X size={14} />
-                    </button>
-                    <button
-                      onClick={() => handleAction(res.id, "CONFIRMED")}
-                      className="px-3 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl flex items-center gap-1.5 shadow-lg shadow-blue-600/10 transition-all"
-                    >
-                      <Check size={14} />
-                      <span>Aprobar</span>
-                    </button>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-1 text-[11px] font-semibold text-slate-500">
-                    {/* ✅ CORRECCIÓN: Renderizado condicional basado en los tipos CONFIRMED del backend */}
-                    {res.status === "CONFIRMED" ? (
-                      <>
-                        <CheckCircle2 size={12} className="text-emerald-500" />
-                        <span>Aceptada</span>
-                      </>
-                    ) : (
-                      <>
-                        <XCircle size={12} className="text-rose-500" />
-                        <span>Cancelada</span>
-                      </>
-                    )}
-                  </div>
-                )}
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

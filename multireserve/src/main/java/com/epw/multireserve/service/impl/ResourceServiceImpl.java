@@ -6,6 +6,8 @@ import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,10 +18,12 @@ import com.epw.multireserve.entity.Business;
 import com.epw.multireserve.entity.Resource;
 import com.epw.multireserve.entity.ResourceStatus;
 import com.epw.multireserve.entity.ResourceType;
+import com.epw.multireserve.entity.User;
 import com.epw.multireserve.exception.ResourceNotFoundException;
 import com.epw.multireserve.repository.BusinessRepository;
 import com.epw.multireserve.repository.ReservationRepository;
 import com.epw.multireserve.repository.ResourceRepository;
+import com.epw.multireserve.repository.UserRepository;
 import com.epw.multireserve.service.ResourceService;
 
 @Service
@@ -30,14 +34,17 @@ public class ResourceServiceImpl implements ResourceService {
         private final ResourceRepository repository;
         private final BusinessRepository businessRepository;
         private final ReservationRepository reservationRepository;
+        private final UserRepository userRepository;
 
         public ResourceServiceImpl(
                         ResourceRepository repository,
                         BusinessRepository businessRepository,
-                        ReservationRepository reservationRepository) {
+                        ReservationRepository reservationRepository,
+                        UserRepository userRepository) {
                 this.repository = repository;
                 this.businessRepository = businessRepository;
                 this.reservationRepository = reservationRepository;
+                this.userRepository = userRepository;
         }
 
         // ==========================================
@@ -45,10 +52,23 @@ public class ResourceServiceImpl implements ResourceService {
         // ==========================================
         @Override
         public ResourceResponse create(CreateResourceRequest request) {
-                Business business = businessRepository
+                Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+                String email = auth.getName();
+                User user = userRepository.findByEmail(email)
+                        .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+                Business business;
+                if (user.getRole().name().equals("EMPLOYEE")) {
+                        if (user.getBusiness() == null) {
+                                throw new IllegalStateException("No tienes un negocio asignado");
+                        }
+                        business = user.getBusiness();
+                } else {
+                        business = businessRepository
                                 .findById(request.getBusinessId())
                                 .orElseThrow(() -> new ResourceNotFoundException(
                                                 "Business " + request.getBusinessId() + " not found"));
+                }
 
                 Resource resource = new Resource();
                 resource.setName(request.getName());
@@ -73,6 +93,26 @@ public class ResourceServiceImpl implements ResourceService {
         @Override
         @Transactional(readOnly = true)
         public List<ResourceResponse> list() {
+                Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+                String email = auth.getName();
+
+                User user = userRepository.findByEmail(email)
+                        .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+                if (user.getRole().name().equals("ADMIN")) {
+                        return repository.findAll().stream().map(this::toResponse).toList();
+                }
+
+                if (user.getRole().name().equals("EMPLOYEE")) {
+                        if (user.getBusiness() != null) {
+                                return repository.findByBusinessId(user.getBusiness().getId())
+                                        .stream()
+                                        .map(this::toResponse)
+                                        .toList();
+                        }
+                        return List.of();
+                }
+
                 return repository.findAll().stream().map(this::toResponse).toList();
         }
 
@@ -92,13 +132,29 @@ public class ResourceServiceImpl implements ResourceService {
         // ==========================================
         @Override
         public ResourceResponse update(Long id, UpdateResourceRequest request) {
+                Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+                String email = auth.getName();
+                User user = userRepository.findByEmail(email)
+                        .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
                 Resource resource = repository.findById(id)
                                 .orElseThrow(() -> new ResourceNotFoundException("Resource " + id + " not found"));
 
-                Business business = businessRepository
+                Business business;
+                if (user.getRole().name().equals("EMPLOYEE")) {
+                        if (user.getBusiness() == null) {
+                                throw new IllegalStateException("No tienes un negocio asignado");
+                        }
+                        if (!resource.getBusiness().getId().equals(user.getBusiness().getId())) {
+                                throw new IllegalStateException("No puedes modificar recursos de otros negocios");
+                        }
+                        business = user.getBusiness();
+                } else {
+                        business = businessRepository
                                 .findById(request.getBusinessId())
                                 .orElseThrow(() -> new ResourceNotFoundException(
                                                 "Business " + request.getBusinessId() + " not found"));
+                }
 
                 resource.setName(request.getName());
                 resource.setPricePerHour(request.getPricePerHour());
@@ -120,9 +176,21 @@ public class ResourceServiceImpl implements ResourceService {
         // ==========================================
         @Override
         public void delete(Long id) {
-                if (!repository.existsById(id)) {
-                        throw new ResourceNotFoundException("Resource " + id + " not found");
+                Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+                String email = auth.getName();
+                User user = userRepository.findByEmail(email)
+                        .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+                Resource resource = repository.findById(id)
+                        .orElseThrow(() -> new ResourceNotFoundException("Resource " + id + " not found"));
+
+                if (user.getRole().name().equals("EMPLOYEE")) {
+                        if (user.getBusiness() == null
+                                || !resource.getBusiness().getId().equals(user.getBusiness().getId())) {
+                                throw new IllegalStateException("No puedes eliminar recursos de otros negocios");
+                        }
                 }
+
                 repository.deleteById(id);
         }
 

@@ -39,6 +39,9 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
         // Obtener reservas por ID de usuario (Filtro JWT seguro en list())
         List<Reservation> findByUserId(Long userId);
 
+        // Obtener reservas por ID de negocio (para empleados)
+        List<Reservation> findByBusinessId(Long businessId);
+
         // 🌟 Añadido para dar soporte a la consulta por nombre del Service
         List<Reservation> findByCustomerName(String customerName);
 
@@ -65,4 +68,8 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
         Double sumRevenueBetweenDates(
                         @Param("startDate") LocalDate startDate,
                         @Param("endDate") LocalDate endDate);
+
+        // 4. Cuenta reservas en un rango de fechas para el flujo mensual
+        @Query("SELECT COUNT(r) FROM Reservation r WHERE r.reservationDate >= :startDate AND r.reservationDate <= :endDate")
+        long countByReservationDateBetween(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
 }

@@ -42,7 +42,7 @@ export default function RegisterPage() {
       await register(name, email, password, "CLIENT");
       
       toast.success("¡Cuenta creada con éxito! Bienvenido.");
-      navigate("/businesses");
+      navigate("/client/catalog");
     } catch (error) {
       console.error(error);
       toast.error("Error al registrarse. El correo podría estar en uso o hubo un fallo en el servidor.");

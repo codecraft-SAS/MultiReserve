@@ -32,14 +32,14 @@ export const useReservations = () => {
   // MÓDULO CLIENTE: Crear una nueva reserva con validación estricta de DTO de Spring Boot
   const createNewReservation = async (reservationData: {
     resourceId: number;
-    resourceName: string;       // 🌟 Añadido para cumplir con @NotBlank de Java
-    resourceType: string;       // 🌟 Añadido para cumplir con @NotNull de Java
-    customerName: string;       // 🌟 Añadido para cumplir con @NotBlank de Java
-    reservationDate: string;    // 🌟 Añadido para cumplir con @NotNull de Java (YYYY-MM-DD)
-    startTime: string;          // Formato ISO string para LocalDateTime
-    endTime: string;            // Formato ISO string para LocalDateTime
+    resourceName: string;
+    resourceType: string;
+    customerName: string;
+    reservationDate: string;
+    startTime: string;
+    endTime: string;
     purpose?: string;
-    // 💳 NUEVOS CAMPOS DE PAGO INTEGRADOS:
+    businessId?: number;
     amountPaid: number;
     paymentMethod: string;
   }) => {

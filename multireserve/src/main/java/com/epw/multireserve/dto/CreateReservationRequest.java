@@ -35,6 +35,10 @@ public class CreateReservationRequest {
 
     private Double amount;
     private Long businessId;
+    private Long resourceId;
+    private Double amountPaid;
+    private String paymentMethod;
+    private String purpose;
 
     // =========================
     // GETTERS AND SETTERS
@@ -110,5 +114,37 @@ public class CreateReservationRequest {
 
     public void setBusinessId(Long businessId) {
         this.businessId = businessId;
+    }
+
+    public Long getResourceId() {
+        return resourceId;
+    }
+
+    public void setResourceId(Long resourceId) {
+        this.resourceId = resourceId;
+    }
+
+    public Double getAmountPaid() {
+        return amountPaid;
+    }
+
+    public void setAmountPaid(Double amountPaid) {
+        this.amountPaid = amountPaid;
+    }
+
+    public String getPaymentMethod() {
+        return paymentMethod;
+    }
+
+    public void setPaymentMethod(String paymentMethod) {
+        this.paymentMethod = paymentMethod;
+    }
+
+    public String getPurpose() {
+        return purpose;
+    }
+
+    public void setPurpose(String purpose) {
+        this.purpose = purpose;
     }
 }

@@ -11,4 +11,6 @@ public interface ResourceRepository
 
     List<Resource> findByBusinessId(Long businessId);
 
+    java.util.Optional<Resource> findByNameIgnoreCase(String name);
+
 }

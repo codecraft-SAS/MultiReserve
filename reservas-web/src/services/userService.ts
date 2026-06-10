@@ -6,6 +6,7 @@ export interface UserDTO {
   email: string;
   role: "ADMIN" | "EMPLOYEE" | "CLIENT";
   password?: string;
+  businessId?: number | null;
 }
 
 // 🌟 Trae todos los usuarios del sistema

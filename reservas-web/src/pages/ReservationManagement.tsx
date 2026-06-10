@@ -15,6 +15,7 @@ import {
   Calendar,
   ShieldCheck
 } from "lucide-react";
+import { ConfirmModal } from "../components/ConfirmModal";
 
 // Sincronizado exactamente con las propiedades de ReservationResponse.java
 interface Reservation {
@@ -44,6 +45,7 @@ export default function ReservationManagement() {
   const [searchTerm, setSearchTerm] = useState("");
   const [focusedRow, setFocusedRow] = useState<number | null>(null);
   const [actionHover, setActionHover] = useState<{row: number, btn: string} | null>(null);
+  const [confirmAction, setConfirmAction] = useState<{ id: number; status: "CONFIRMED" | "CANCELLED" } | null>(null);
   
   // Estado para controlar el Modal del Ojo
   const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null);
@@ -67,23 +69,22 @@ export default function ReservationManagement() {
   }, []);
 
   // Actualización de estado persistente y segura
-  const updateStatus = async (id: number, newStatus: "CONFIRMED" | "CANCELLED") => {
-    const actionText = newStatus === "CONFIRMED" ? "confirmar" : "cancelar";
-    if (!window.confirm(`¿Estás seguro de que deseas ${actionText} esta reserva?`)) {
-      return;
-    }
+  const updateStatus = (id: number, newStatus: "CONFIRMED" | "CANCELLED") => {
+    setConfirmAction({ id, status: newStatus });
+  };
 
+  const executeStatusUpdate = async () => {
+    if (!confirmAction) return;
+    const { id, status: newStatus } = confirmAction;
     try {
       await api.patch(`/reservations/${id}/status`, null, {
         params: { value: newStatus }
       });
       
-      // Actualización reactiva e inmediata de la UI local
       setReservations(prev => 
         prev.map(res => res.id === id ? { ...res, status: newStatus } : res)
       );
 
-      // Si el modal está abierto viendo esta misma reserva, actualizamos su estado también
       if (selectedReservation && selectedReservation.id === id) {
         setSelectedReservation(prev => prev ? { ...prev, status: newStatus } : null);
       }
@@ -93,6 +94,8 @@ export default function ReservationManagement() {
       console.error("Error al actualizar estado en el servidor:", err);
       const backendMessage = err.response?.data?.message || "No se pudo actualizar la reserva";
       toast.error(backendMessage);
+    } finally {
+      setConfirmAction(null);
     }
   };
 
@@ -435,6 +438,16 @@ export default function ReservationManagement() {
         </div>
       )}
 
+      <ConfirmModal
+        open={confirmAction !== null}
+        title={confirmAction?.status === "CONFIRMED" ? "Confirmar reserva" : "Cancelar reserva"}
+        message={`¿Estás seguro de que deseas ${confirmAction?.status === "CONFIRMED" ? "confirmar" : "cancelar"} esta reserva?`}
+        confirmLabel={confirmAction?.status === "CONFIRMED" ? "Confirmar" : "Cancelar"}
+        cancelLabel="Cerrar"
+        confirmColor={confirmAction?.status === "CONFIRMED" ? "#2563eb" : "#ef4444"}
+        onConfirm={executeStatusUpdate}
+        onCancel={() => setConfirmAction(null)}
+      />
     </div>
   );
 }

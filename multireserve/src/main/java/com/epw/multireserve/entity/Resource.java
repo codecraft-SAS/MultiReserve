@@ -33,8 +33,8 @@ public class Resource {
     @Column(nullable = false)
     private Double pricePerHour;
 
-    // Imagen del recurso
-    @Column(length = 500)
+    // Imagen del recurso (soporta base64)
+    @Column(columnDefinition = "TEXT")
     private String imageUrl;
 
     // Descripción detallada

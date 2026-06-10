@@ -4,9 +4,21 @@ import api from "../../api/axios";
 interface CategoryData {
   name: string;
   count: number;
-  percentage: string;
+  percent: number;
   color: string;
 }
+
+const CATEGORY_LABELS: Record<string, string> = {
+  RESTAURANT: "🍔 Restaurantes / Mesas",
+  RESTAURANTE: "🍔 Restaurantes / Mesas",
+  SPORT: "⚽ Canchas Sintéticas / Deporte",
+  DEPORTE: "⚽ Canchas Sintéticas / Deporte",
+  HOTEL: "🏨 Hotel / Alojamiento",
+  EVENT: "🎉 Eventos",
+  COWORKING: "💻 Coworking",
+};
+
+const BAR_COLORS = ["#2563eb", "#8b5cf6", "#10b981", "#f59e0b", "#ec4899"];
 
 export function BusinessChart() {
   const [categories, setCategories] = useState<CategoryData[]>([]);
@@ -16,37 +28,20 @@ export function BusinessChart() {
     const fetchCategoryStats = async () => {
       try {
         setLoading(true);
-        // Consumimos el endpoint de Spring Boot: retorna un Array de tuplas [String, Long]
         const response = await api.get<[string, number][]>('/reports/categories');
-        
+
         if (response.data && response.data.length > 0) {
-          // 1. Encontrar el valor máximo para que la barra más alta use el 100% y las demás sean proporcionales
           const maxCount = Math.max(...response.data.map(item => item[1]), 1);
-
-          // Paleta de colores Premium fija para asignar cíclicamente
-          const colors = ["bg-blue-500", "bg-violet-500", "bg-emerald-500", "bg-amber-500", "bg-pink-500"];
-
-          // 2. Mapear y parsear los datos reales
           const parsedData = response.data.map((item, index) => {
-            const rawCategory = item[0] || "Otros";
-            const count = item[1];
-            
-            // Calculamos el porcentaje dinámico real
-            const percentage = `${Math.round((count / maxCount) * 100)}%`;
-
-            // Traducimos o formateamos el nombre estético de la categoría
-            let formattedName = rawCategory.charAt(0).toUpperCase() + rawCategory.slice(1).toLowerCase();
-            if (rawCategory.toUpperCase() === "DEPORTE") formattedName = "🏀 Canchas Sintéticas / Deporte";
-            if (rawCategory.toUpperCase() === "RESTAURANTE") formattedName = "🍔 Restaurantes / Mesas";
-
+            const raw = item[0] || "OTROS";
+            const label = CATEGORY_LABELS[raw.toUpperCase()] || raw.charAt(0).toUpperCase() + raw.slice(1).toLowerCase();
             return {
-              name: formattedName,
-              count,
-              percentage,
-              color: colors[index % colors.length] // Asigna un color diferente por cada iteración
+              name: label,
+              count: item[1],
+              percent: Math.round((item[1] / maxCount) * 100),
+              color: BAR_COLORS[index % BAR_COLORS.length],
             };
           });
-
           setCategories(parsedData);
         }
       } catch (error) {
@@ -55,13 +50,12 @@ export function BusinessChart() {
         setLoading(false);
       }
     };
-
     fetchCategoryStats();
   }, []);
 
   if (loading) {
     return (
-      <div className="flex flex-col gap-2 py-6 items-center justify-center text-xs text-slate-500 animate-pulse">
+      <div style={{ display: "flex", flexDirection: "column", gap: "8px", padding: "24px 0", alignItems: "center", justifyContent: "center", fontSize: "12px", color: "#71717a" }}>
         <span>Calculando desgloses comerciales...</span>
       </div>
     );
@@ -69,28 +63,24 @@ export function BusinessChart() {
 
   if (categories.length === 0) {
     return (
-      <p className="text-xs text-slate-500 text-center py-6">
+      <p style={{ fontSize: "12px", color: "#71717a", textAlign: "center", padding: "24px 0" }}>
         No hay establecimientos registrados en el sistema.
       </p>
     );
   }
 
   return (
-    <div className="space-y-4 pt-2">
+    <div style={{ display: "flex", flexDirection: "column", gap: "16px", paddingTop: "8px" }}>
       {categories.map((cat, index) => (
-        <div key={index} className="space-y-1.5">
-          <div className="flex justify-between text-xs font-semibold">
-            <span className="text-slate-300">{cat.name}</span>
-            <span className="text-slate-400">
-              {cat.count} {cat.count === 1 ? 'establecimiento' : 'establecimientos'}
+        <div key={index} style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", fontWeight: 600 }}>
+            <span style={{ color: "#e4e4e7" }}>{cat.name}</span>
+            <span style={{ color: "#a1a1aa" }}>
+              {cat.count} {cat.count === 1 ? "establecimiento" : "establecimientos"}
             </span>
           </div>
-          {/* Contenedor de la barra proporcional en tiempo real */}
-          <div className="w-full h-2.5 bg-slate-950 rounded-full overflow-hidden border border-slate-800">
-            <div 
-              className={`h-full ${cat.color} rounded-full transition-all duration-500`} 
-              style={{ width: cat.percentage }}
-            />
+          <div style={{ width: "100%", height: "10px", backgroundColor: "#09090b", borderRadius: "9999px", overflow: "hidden", border: "1px solid #27272a" }}>
+            <div style={{ height: "100%", borderRadius: "9999px", backgroundColor: cat.color, width: `${cat.percent}%`, transition: "width 0.5s" }} />
           </div>
         </div>
       ))}

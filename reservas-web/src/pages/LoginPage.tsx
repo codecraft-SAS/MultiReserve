@@ -37,11 +37,10 @@ export default function LoginPage() {
 
       if (userRole === "ADMIN") {
         navigate("/admin/dashboard");
-      } else if (userRole === "CLIENT") {
-        navigate("/client/catalog"); // 🌟 Enviado directo al catálogo de clientes corregido
+      } else if (userRole === "EMPLOYEE") {
+        navigate("/employee/dashboard");
       } else {
-        // Por si tienes roles de empleado u otros
-        navigate("/client/catalog"); 
+        navigate("/client/catalog");
       }
     } catch (error) {
       console.error(error);

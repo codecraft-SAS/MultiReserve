@@ -30,7 +30,7 @@ public class CreateBusinessRequest {
     // =========================
     // NUEVOS CAMPOS
     // =========================
-    @Size(max = 255)
+    @Size(max = 50000)
     private String imageUrl;
 
     @Size(max = 500)

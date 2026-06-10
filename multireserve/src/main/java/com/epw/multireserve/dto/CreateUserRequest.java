@@ -27,6 +27,8 @@ public class CreateUserRequest {
     @NotNull(message = "El rol es obligatorio")
     private Role role;
 
+    private Long businessId;
+
     // =========================
     // GETTERS AND SETTERS
     // =========================
@@ -61,5 +63,13 @@ public class CreateUserRequest {
 
     public void setRole(Role role) {
         this.role = role;
+    }
+
+    public Long getBusinessId() {
+        return businessId;
+    }
+
+    public void setBusinessId(Long businessId) {
+        this.businessId = businessId;
     }
 }
