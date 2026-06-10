@@ -1,7 +1,7 @@
 import { useState } from "react";
 import toast from "react-hot-toast";
 import { useAuth } from "../context/AuthContext";
-import { Eye, EyeOff } from "lucide-react";
+import { Check, Eye, EyeOff } from "lucide-react";
 
 export default function LoginPage({ onSuccess, onGoToRegister }: { onSuccess: (role: string) => void; onGoToRegister?: () => void }) {
   const { login } = useAuth();
@@ -11,6 +11,9 @@ export default function LoginPage({ onSuccess, onGoToRegister }: { onSuccess: (r
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  const hasEmailValue = email.trim().length > 0;
+  const hasPasswordValue = password.trim().length > 0;
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -95,17 +98,36 @@ export default function LoginPage({ onSuccess, onGoToRegister }: { onSuccess: (r
                 width: "100%",
                 backgroundColor: "#333333",
                 color: "#ffffff",
-                border: "none",
                 borderRadius: "4px",
                 padding: "14px 20px",
                 fontSize: "16px",
                 fontWeight: 500,
                 boxSizing: "border-box",
                 outline: "none",
+                border: hasEmailValue ? "1px solid rgba(34, 197, 94, 0.65)" : "1px solid transparent",
+                boxShadow: hasEmailValue ? "0 0 0 1px rgba(34, 197, 94, 0.18)" : "none",
+                paddingRight: hasEmailValue ? "48px" : "20px"
               }}
               disabled={loading}
               required
             />
+            {hasEmailValue && (
+              <div
+                style={{
+                  position: "absolute",
+                  right: "16px",
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  color: "#22c55e",
+                  display: "flex",
+                  alignItems: "center",
+                  pointerEvents: "none"
+                }}
+                aria-hidden="true"
+              >
+                <Check size={18} />
+              </div>
+            )}
           </div>
 
           <div style={{ position: "relative" }}>
@@ -118,17 +140,37 @@ export default function LoginPage({ onSuccess, onGoToRegister }: { onSuccess: (r
                 width: "100%",
                 backgroundColor: "#333333",
                 color: "#ffffff",
-                border: "none",
                 borderRadius: "4px",
                 padding: "14px 48px 14px 20px",
                 fontSize: "16px",
                 fontWeight: 500,
                 boxSizing: "border-box",
                 outline: "none",
+
+                border: hasPasswordValue ? "1px solid rgba(34, 197, 94, 0.65)" : "1px solid transparent",
+                boxShadow: hasPasswordValue ? "0 0 0 1px rgba(34, 197, 94, 0.18)" : "none",
+                paddingRight: hasPasswordValue ? "76px" : "48px"
               }}
               disabled={loading}
               required
             />
+            {hasPasswordValue && (
+              <div
+                style={{
+                  position: "absolute",
+                  right: "48px",
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  color: "#22c55e",
+                  display: "flex",
+                  alignItems: "center",
+                  pointerEvents: "none"
+                }}
+                aria-hidden="true"
+              >
+                <Check size={18} />
+              </div>
+            )}
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
