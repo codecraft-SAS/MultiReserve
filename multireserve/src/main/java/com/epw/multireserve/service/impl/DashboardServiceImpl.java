@@ -24,7 +24,7 @@ public class DashboardServiceImpl implements DashboardService {
     private final ResourceRepository resourceRepository;
     private final ReservationRepository reservationRepository;
     private final UserRepository userRepository;
-
+// Constructor para inyección de dependencias
     public DashboardServiceImpl(BusinessRepository businessRepository,
             ResourceRepository resourceRepository,
             ReservationRepository reservationRepository,

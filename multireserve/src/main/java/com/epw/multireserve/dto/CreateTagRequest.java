@@ -12,7 +12,7 @@ public class CreateTagRequest {
     public String getName() {
         return name;
     }
-
+// No se permite setear el ID, ya que es autogenerado por la base de datos
     public void setName(String name) {
         this.name = name;
     }

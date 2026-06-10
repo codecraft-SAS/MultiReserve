@@ -27,7 +27,7 @@ public class CustomUserDetailsService
     public UserDetails loadUserByUsername(
             String email)
             throws UsernameNotFoundException {
-
+// Buscar usuario por email usando UserRepository
         User user = repository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException(
                         "User not found"));

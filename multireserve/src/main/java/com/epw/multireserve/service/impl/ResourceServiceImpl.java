@@ -68,8 +68,12 @@ public class ResourceServiceImpl implements ResourceService {
                                 .findById(request.getBusinessId())
                                 .orElseThrow(() -> new ResourceNotFoundException(
                                                 "Business " + request.getBusinessId() + " not found"));
+<<<<<<< HEAD
                 }
 
+=======
+// Validar y mapear el tipo y estado del recurso usando los métodos de parsing
+>>>>>>> 9279604bdcbf6132ca36e3abf24ab78b44047789
                 Resource resource = new Resource();
                 resource.setName(request.getName());
                 resource.setPricePerHour(request.getPricePerHour());
