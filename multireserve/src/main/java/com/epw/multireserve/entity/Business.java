@@ -14,6 +14,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.PreRemove; // 🌟 Importación necesaria para el ciclo de vida de JPA
 import jakarta.persistence.Table;
 
 @Entity
@@ -90,6 +91,18 @@ public class Business {
     // =========================
     @OneToMany(mappedBy = "business")
     private List<User> employees = new ArrayList<>();
+
+    // =========================================================
+    // 🌟 LOGICA OPCIÓN A: EVITAR ERROR 500 DESVINCULANDO EMPLEADOS
+    // =========================================================
+    @PreRemove
+    private void preRemove() {
+        if (employees != null) {
+            for (User employee : employees) {
+                employee.setBusiness(null); // Borra la llave foránea en los usuarios sin eliminarlos
+            }
+        }
+    }
 
     // =========================
     // GETTERS AND SETTERS
