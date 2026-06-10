@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import api from "../../api/axios";
+import { http } from "../../api/http";
 import toast from "react-hot-toast";
 import {
   BarChart3,
@@ -50,12 +50,12 @@ export default function ReportsManagement() {
 
       // Apuntamos a las rutas unificadas en /reports
       const [responseMetrics, responseChart] = await Promise.all([
-        api.get<DashboardResponse>(`/reports/stats?month=${period}`), 
-        api.get<MonthlyReservations[]>("/reports/monthly")             
+        http<DashboardResponse>(`/reports/stats?month=${period}`), 
+        http<MonthlyReservations[]>("/reports/monthly")             
       ]);
 
-      setData(responseMetrics.data);
-      setChartData(responseChart.data);
+      setData(responseMetrics);
+      setChartData(responseChart);
     } catch (err: any) {
       console.error("Error al cargar métricas reales del dashboard:", err);
       toast.error("No se pudieron sincronizar las estadísticas del servidor");

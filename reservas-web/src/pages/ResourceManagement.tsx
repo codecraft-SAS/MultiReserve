@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import api from "../api/axios";
+import { http } from "../api/http";
 import toast from "react-hot-toast";
 import { 
   Layers, 
@@ -20,7 +19,6 @@ import {
 import { ConfirmModal } from "../components/ConfirmModal";
 import { useAuth } from "../context/AuthContext";
 
-// Modelo de datos real acoplado a las respuestas de Spring Boot 3
 interface Resource {
   id: number;
   name: string;
@@ -36,8 +34,7 @@ interface Resource {
   description?: string;
 }
 
-export default function ResourceManagement() {
-  const navigate = useNavigate();
+export default function ResourceManagement({ onNavigate }: { onNavigate: (page: string) => void }) {
   const { user } = useAuth();
 
   // Estados de datos de la API
@@ -60,8 +57,8 @@ export default function ResourceManagement() {
   const fetchResources = async () => {
     try {
       setLoading(true);
-      const response = await api.get<Resource[]>("/resources");
-      setResources(response.data);
+      const response = await http<Resource[]>("/resources");
+      setResources(response);
     } catch (err: any) {
       toast.error("Error al conectar con el servidor de recursos");
       console.error("Backend fetch error:", err);
@@ -82,7 +79,7 @@ export default function ResourceManagement() {
   const executeDelete = async () => {
     if (!confirmDelete) return;
     try {
-      await api.delete(`/resources/${confirmDelete.id}`);
+      await http(`/resources/${confirmDelete.id}`, { method: "DELETE" });
       toast.success("Recurso eliminado correctamente");
       setResources((prev) => prev.filter((r) => r.id !== confirmDelete.id));
     } catch (err: any) {
@@ -119,11 +116,14 @@ export default function ResourceManagement() {
         businessId: editingResource.businessId
       };
 
-      const response = await api.put<Resource>(`/resources/${editingResource.id}`, payload);
+      const updated = await http<Resource>(`/resources/${editingResource.id}`, {
+        method: "PUT",
+        body: JSON.stringify(payload)
+      });
       toast.success("Recurso actualizado con éxito");
       
       // Actualizar el estado local ordenadamente
-      setResources((prev) => prev.map((r) => (r.id === editingResource.id ? response.data : r)));
+      setResources((prev) => prev.map((r) => (r.id === editingResource.id ? updated : r)));
       setIsEditModalOpen(false);
     } catch (err: any) {
       const msg = err.response?.data?.message || "Error al actualizar el recurso";
@@ -186,9 +186,9 @@ export default function ResourceManagement() {
           </p>
         </div>
 
-        {user?.role === "ADMIN" && (
+        {user?.role !== "CLIENT" && (
           <button
-            onClick={() => navigate("/admin/create-resource")}
+            onClick={() => onNavigate(user?.role === "ADMIN" ? "/admin/create-resource" : "/employee/create-resource")}
             onMouseEnter={() => setCreateHover(true)}
             onMouseLeave={() => setCreateHover(false)}
             style={{

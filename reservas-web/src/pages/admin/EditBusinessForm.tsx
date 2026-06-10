@@ -1,12 +1,9 @@
-import { useParams, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { ArrowLeft, Save, Loader2 } from "lucide-react";
-import { getBusinessById, updateBusiness } from "../../services/businessService";
+import { businessesApi } from "../../api/businesses";
 import toast from "react-hot-toast";
 
-export default function EditBusinessForm() {
-  const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
+export default function EditBusinessForm({ businessId, onNavigate }: { businessId: number | null; onNavigate: () => void }) {
   
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -22,15 +19,15 @@ export default function EditBusinessForm() {
     email: "",
     imageUrl: "",
     active: true,
-    ownerId: null as number | null // ◄ Campo necesario para satisfacer el @NotNull de Java
+    ownerId: null as number | null
   });
 
   useEffect(() => {
     const loadBusinessData = async () => {
-      if (!id) return;
+      if (businessId == null) return;
       try {
         setLoading(true);
-        const business = await getBusinessById(Number(id));
+        const business = await businessesApi.getById(businessId);
         setFormData({
           name: business.name || "",
           category: business.category || "",
@@ -47,14 +44,14 @@ export default function EditBusinessForm() {
       } catch (error) {
         console.error("Error al cargar el negocio:", error);
         toast.error("No se pudieron cargar los datos del establecimiento");
-        navigate("/admin/businesses");
+        onNavigate();
       } finally {
         setLoading(false);
       }
     };
 
     loadBusinessData();
-  }, [id, navigate]);
+  }, [businessId]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
@@ -68,12 +65,12 @@ export default function EditBusinessForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!id) return;
+    if (businessId == null) return;
     try {
       setSaving(true);
-      await updateBusiness(Number(id), formData);
+      await businessesApi.update(businessId, formData);
       toast.success("Establecimiento actualizado con éxito");
-      navigate("/admin/businesses");
+      onNavigate();
     } catch (error) {
       console.error("Error al actualizar:", error);
       toast.error("Hubo un error al guardar los cambios");
@@ -97,7 +94,7 @@ export default function EditBusinessForm() {
       {/* Encabezado */}
       <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
         <button 
-          onClick={() => navigate("/admin/businesses")}
+          onClick={() => onNavigate()}
           style={{ backgroundColor: "rgba(255,255,255,0.04)", border: "none", borderRadius: "10px", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", padding: "10px", cursor: "pointer" }}
         >
           <ArrowLeft size={18} />

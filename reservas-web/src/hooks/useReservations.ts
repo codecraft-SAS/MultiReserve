@@ -1,12 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import toast from "react-hot-toast";
-import type { Reservation } from "../types/Reservation";
-import { 
-  getReservations, 
-  createReservation, 
-  cancelReservation, 
-  changeReservationStatus 
-} from "../services/reservationService";
+import { reservationsApi, type Reservation } from "../api/reservations";
 
 export const useReservations = () => {
   const [reservations, setReservations] = useState<Reservation[]>([]);
@@ -18,7 +12,7 @@ export const useReservations = () => {
     try {
       setLoading(true);
       setError(null);
-      const data = await getReservations();
+      const data = await reservationsApi.list();
       setReservations(data);
     } catch (err: any) {
       const errMsg = err.response?.data?.message || "No se pudieron cargar las reservas.";
@@ -45,7 +39,7 @@ export const useReservations = () => {
   }) => {
     try {
       setError(null);
-      const newRes = await createReservation(reservationData);
+      const newRes = await reservationsApi.create(reservationData);
       setReservations((prev) => [newRes, ...prev]);
       toast.success("¡Reserva solicitada con éxito!");
       return { success: true, data: newRes };
@@ -62,7 +56,7 @@ export const useReservations = () => {
   const cancelExistingReservation = async (id: number) => {
     try {
       setError(null);
-      await cancelReservation(id);
+      await reservationsApi.changeStatus(id, "CANCELLED");
       setReservations((prev) =>
         prev.map((res) => (res.id === id ? { ...res, status: "CANCELLED" } : res))
       );
@@ -79,7 +73,7 @@ export const useReservations = () => {
   const updateReservationStatus = async (id: number, nextStatus: "CONFIRMED" | "CANCELLED" | "REJECTED" | "COMPLETED") => {
     try {
       setError(null);
-      await changeReservationStatus(id, nextStatus);
+      await reservationsApi.changeStatus(id, nextStatus);
       setReservations((prev) =>
         prev.map((res) => (res.id === id ? { ...res, status: nextStatus } : res))
       );

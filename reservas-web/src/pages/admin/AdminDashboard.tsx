@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { BusinessChart } from "../../components/dashboard/BusinessChart";
 import { ReservationChart } from "../../components/dashboard/ReservationChart";
 import { toast } from "react-hot-toast";
-import api from "../../api/axios"; 
+import { http } from "../../api/http"; 
 import { formatCurrency } from "../../utils/formatCurrency"; 
 
 import {
@@ -96,8 +96,8 @@ export default function AdminDashboard() {
     const fetchDashboardStats = async () => {
       try {
         setLoading(true);
-        const response = await api.get<DashboardStats>('/reports/stats');
-        setStats(response.data);
+        const response = await http<DashboardStats>('/reports/stats');
+        setStats(response);
       } catch (error) {
         toast.error("Error al sincronizar las métricas en tiempo real");
         console.error("Dashboard stats error:", error);

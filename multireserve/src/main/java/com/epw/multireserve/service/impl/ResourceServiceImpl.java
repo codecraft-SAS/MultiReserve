@@ -21,7 +21,7 @@ import com.epw.multireserve.entity.ResourceType;
 import com.epw.multireserve.entity.User;
 import com.epw.multireserve.exception.ResourceNotFoundException;
 import com.epw.multireserve.repository.BusinessRepository;
-
+import com.epw.multireserve.repository.ReservationRepository;
 import com.epw.multireserve.repository.ResourceRepository;
 import com.epw.multireserve.repository.UserRepository;
 import com.epw.multireserve.service.ResourceService;
@@ -68,6 +68,8 @@ public class ResourceServiceImpl implements ResourceService {
                                 .findById(request.getBusinessId())
                                 .orElseThrow(() -> new ResourceNotFoundException(
                                                 "Business " + request.getBusinessId() + " not found"));
+                }
+
                 Resource resource = new Resource();
                 resource.setName(request.getName());
                 resource.setPricePerHour(request.getPricePerHour());

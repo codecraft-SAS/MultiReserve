@@ -1,11 +1,9 @@
 import { useBusinesses } from "../../hooks/useBusinesses";
 import { Plus, Edit2, Trash2, Store, MapPin, Layers, CalendarCheck, Eye, EyeOff, Loader2 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 import { useState, useMemo } from "react";
 
-export default function ManageBusinesses() {
+export default function ManageBusinesses({ onNavigate }: { onNavigate: (page: string, id?: number) => void }) {
   const { businesses, loading, toggleBusinessStatus, deleteBusiness } = useBusinesses();
-  const navigate = useNavigate();
   
   const [confirmDelete, setConfirmDelete] = useState<{ id: number; name: string } | null>(null);
 
@@ -52,7 +50,7 @@ export default function ManageBusinesses() {
         </div>
 
         <button
-          onClick={() => navigate("/admin/create-business")}
+          onClick={() => onNavigate("/admin/create-business")}
           style={{
             display: "flex",
             alignItems: "center",
@@ -209,7 +207,7 @@ export default function ManageBusinesses() {
                 </button>
 
                 <button
-                  onClick={() => navigate(`/admin/edit-business/${biz.id}`)}
+                  onClick={() => onNavigate("/admin/edit-business", biz.id)}
                   style={{
                     display: "flex",
                     alignItems: "center",

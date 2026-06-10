@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import api from "../../api/axios";
+import { http } from "../../api/http";
 
 interface MonthlyData {
   month: string;
@@ -15,11 +15,11 @@ export function ReservationChart() {
     const fetchMonthlyData = async () => {
       try {
         setLoading(true);
-        const response = await api.get<{ month: string; reservations: number }[]>('/reports/monthly');
+        const response = await http<{ month: string; reservations: number }[]>('/reports/monthly');
 
-        if (response.data && response.data.length > 0) {
-          const maxReservations = Math.max(...response.data.map(m => m.reservations), 1);
-          const parsedData = response.data.map(item => ({
+        if (response && response.length > 0) {
+          const maxReservations = Math.max(...response.map(m => m.reservations), 1);
+          const parsedData = response.map(item => ({
             month: item.month ? item.month.substring(0, 3) : "---",
             count: item.reservations,
             heightPercent: Math.max((item.reservations / maxReservations) * 100, 8),

@@ -52,19 +52,69 @@ npm run build        # tsc -b && vite build
 npm run lint         # eslint
 ```
 
-### Routing structure (React Router 7)
-- `/login`, `/register` — public
-- `/admin/*` — requires `ADMIN` role: dashboard, businesses, resources, reservations, users, reports, profile
-- `/employee/*` — requires `EMPLOYEE` role: dashboard, profile
-- `/client/*` — requires `CLIENT` role: catalog, my-reservations, profile
-- Route protection via `PrivateRoute.tsx` with `allowedRoles` prop
+### Architecture
+- **State-based routing**: no React Router. `App.tsx` manages page via `useState("pageName")` and renders via `switch`.
+- **HTTP**: custom `http<T>()` fetch wrapper in `src/api/http.ts` with auto JWT injection and 401 handling.
+- **API layer**: `src/api/{entity}.ts` — typed functions per entity (e.g. `businessesApi.list()`, `coursesApi.create()`).
+- **TanStack Query hooks**: `src/api/{entity}.queries.ts` — `useQuery`/`useMutation` wrappers with cache invalidation.
+- **Auth**: `src/context/AuthContext.tsx` manages JWT + user state, persisted in localStorage.
+- **Layout**: `src/layouts/MainLayout.tsx` takes `sidebar` + `content` props. `src/components/SidebarMenu.tsx` renders nav buttons.
+- **Charts**: chart.js + react-chartjs-2 via `src/charts/SalesChart.tsx` and `src/charts/ProductsChart.tsx`.
+- **Styling**: Tailwind CSS 4 + inline styles. `@import "tailwindcss"` in `index.css`.
+- No `.env` needed — API base URL hardcoded in `src/api/http.ts` as `http://localhost:8080/api`.
+- Route protection via `PrivateRoute.tsx` (shows `<LoginPage />` if no session).
 
-### Architecture notes
-- Axios instance in `src/api/axios.ts` with `baseURL: http://localhost:8080/api` and auto-injected JWT from `localStorage.getItem("token")`
-- **No `.env` file needed** — the base URL is hardcoded in axios.ts; Vite proxy (`/api` → `:8080`) handles it in dev
-- Auth context in `src/context/AuthContext.tsx` manages token + user state
-- Hooks in `src/hooks/`: `useBusinesses`, `useReservations`, `useResources` (TanStack Query wrappers)
-- Styling: Tailwind CSS 4 with `@tailwindcss/vite` plugin
+### File structure
+```
+src/
+├── api/
+│   ├── http.ts              # generic fetch wrapper
+│   ├── auth.ts              # login, register, updateProfile
+│   ├── auth.queries.ts
+│   ├── businesses.ts        # CRUD + search/filter endpoints
+│   ├── businesses.queries.ts
+│   ├── resources.ts
+│   ├── resources.queries.ts
+│   ├── reservations.ts
+│   ├── reservations.queries.ts
+│   ├── users.ts
+│   ├── users.queries.ts
+│   ├── courses.ts
+│   ├── courses.queries.ts
+│   ├── departments.ts
+│   ├── departments.queries.ts
+│   ├── dashboard.ts         # real API + mock fallback
+│   └── dashboard.queries.ts
+├── charts/
+│   ├── SalesChart.tsx
+│   └── ProductsChart.tsx
+├── components/
+│   ├── SidebarMenu.tsx
+│   ├── PrivateRoute.tsx
+│   ├── ConfirmModal.tsx
+│   ├── layout/
+│   └── dashboard/
+├── context/
+│   └── AuthContext.tsx
+├── layouts/
+│   └── MainLayout.tsx
+├── mocks/
+│   └── dashboard.mock.ts
+├── pages/
+│   ├── LoginPage.tsx
+│   ├── DashboardPage.tsx
+│   ├── CoursesPage.tsx
+│   ├── BusinessManagement.tsx
+│   ├── ResourceManagement.tsx
+│   ├── ReservationManagement.tsx
+│   ├── BusinessCatalog.tsx
+│   ├── ClientReservations.tsx
+│   ├── EmployeePanel.tsx
+│   ├── ProfilePage.tsx
+│   └── admin/
+├── App.tsx                  # state-based router
+└── main.tsx                 # AuthProvider + QueryClientProvider
+```
 
 ## Conventions
 - Backend uses Lombok (`@Data`, `@Builder`, etc.) — make sure annotation processor is enabled in IDE

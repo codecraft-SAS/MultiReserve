@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import { User, Mail, Shield, ShieldAlert, ShieldCheck, Edit3, Save, X, Loader2 } from "lucide-react";
+import { authApi } from "../api/auth";
 import toast from "react-hot-toast";
 import { colors, layout, buttons, loadingSpinner } from "../utils/colors";
 
 export function ProfilePage() {
-  const { user, updateUser } = useAuth();
+  const { user, setUser } = useAuth();
 
   const [isEditing, setIsEditing] = useState(false);
   const [fullName, setFullName] = useState("");
@@ -64,7 +65,8 @@ export function ProfilePage() {
 
     setIsSaving(true);
     try {
-      await updateUser(fullName, email);
+      const updated = await authApi.updateProfile({ fullName, email });
+      setUser({ token: user!.token, fullName: updated.fullName, email: updated.email, role: updated.role });
       toast.success("¡Perfil actualizado con éxito!");
       setIsEditing(false);
     } catch (error) {

@@ -9,51 +9,50 @@ import {
   LogOut,
   User,
 } from "lucide-react";
-import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 
 interface SidebarProps {
   isOpen: boolean;
+  currentPage: string;
+  onNavigate: (page: string) => void;
 }
 
-export default function Sidebar({ isOpen }: SidebarProps) {
+export default function Sidebar({ isOpen, currentPage, onNavigate }: SidebarProps) {
   const { user, logout } = useAuth();
-  const navigate = useNavigate();
-  const location = useLocation();
-
   const [hoveredPath, setHoveredPath] = useState<string | null>(null);
   const [logoutHover, setLogoutHover] = useState(false);
 
   if (!user) return null;
 
-  // 🛠️ CONFIGURACIÓN DE MENÚS CORREGIDA: Ahora todos los roles tienen acceso a su perfil oficial
-  const menuConfig = {
+  const role = user.role?.toUpperCase();
+
+  const menuConfig: Record<string, { name: string; page: string; icon: React.ReactNode }[]> = {
     ADMIN: [
-      { name: "Dashboard", path: "/admin/dashboard", icon: <LayoutDashboard size={18} /> },
-      { name: "Usuarios", path: "/admin/users", icon: <Users size={18} /> },
-      { name: "Negocios", path: "/admin/businesses", icon: <Store size={18} /> },
-      { name: "Recursos", path: "/admin/resources", icon: <Layers size={18} /> },
-      { name: "Reservas", path: "/admin/reservations", icon: <CalendarCheck size={18} /> },
-      { name: "Reportes", path: "/admin/reports", icon: <BarChart3 size={18} /> },
-      { name: "Mi Perfil", path: "/admin/profile", icon: <User size={18} /> }, // ◄ ¡Añadido!
+      { name: "Dashboard", page: "/admin/dashboard", icon: <LayoutDashboard size={18} /> },
+      { name: "Usuarios", page: "/admin/users", icon: <Users size={18} /> },
+      { name: "Negocios", page: "/admin/businesses", icon: <Store size={18} /> },
+      { name: "Recursos", page: "/admin/resources", icon: <Layers size={18} /> },
+      { name: "Reservas", page: "/admin/reservations", icon: <CalendarCheck size={18} /> },
+      { name: "Reportes", page: "/admin/reports", icon: <BarChart3 size={18} /> },
+      { name: "Mi Perfil", page: "/admin/profile", icon: <User size={18} /> },
     ],
     EMPLOYEE: [
-      { name: "Dashboard", path: "/employee/dashboard", icon: <LayoutDashboard size={18} /> },
-      { name: "Recursos", path: "/employee/resources", icon: <Layers size={18} /> },
-      { name: "Reservas", path: "/employee/reservations", icon: <CalendarCheck size={18} /> },
-      { name: "Mi Perfil", path: "/employee/profile", icon: <User size={18} /> }, // ◄ ¡Añadido!
+      { name: "Dashboard", page: "/employee/dashboard", icon: <LayoutDashboard size={18} /> },
+      { name: "Recursos", page: "/employee/resources", icon: <Layers size={18} /> },
+      { name: "Reservas", page: "/employee/reservations", icon: <CalendarCheck size={18} /> },
+      { name: "Mi Perfil", page: "/employee/profile", icon: <User size={18} /> },
     ],
     CLIENT: [
-      { name: "Buscar Locales", path: "/client/catalog", icon: <Store size={18} /> },
-      { name: "Mis Reservas", path: "/client/my-reservations", icon: <CalendarCheck size={18} /> },
-      { name: "Mi Perfil", path: "/client/profile", icon: <User size={18} /> },
+      { name: "Buscar Locales", page: "/client/catalog", icon: <Store size={18} /> },
+      { name: "Mis Reservas", page: "/client/my-reservations", icon: <CalendarCheck size={18} /> },
+      { name: "Mi Perfil", page: "/client/profile", icon: <User size={18} /> },
     ],
   };
 
-  const menu = menuConfig[user.role as keyof typeof menuConfig] || [];
+  const menu = menuConfig[role] || [];
 
-  const getRoleBadgeStyles = (role: string) => {
-    switch (role) {
+  const getRoleBadgeStyles = (r: string) => {
+    switch (r) {
       case "ADMIN":
         return { backgroundColor: "rgba(239, 68, 68, 0.1)", color: "#f87171", border: "1px solid rgba(239, 68, 68, 0.2)" };
       case "EMPLOYEE":
@@ -76,16 +75,15 @@ export default function Sidebar({ isOpen }: SidebarProps) {
         width: isOpen ? "260px" : "0px",
         height: "100%",
         boxSizing: "border-box",
-        flexShrink: 0
+        flexShrink: 0,
       }}
     >
       <div>
-        {/* LOGO HEADER */}
         <div style={{ padding: "24px", borderBottom: "1px solid rgba(255, 255, 255, 0.03)", boxSizing: "border-box" }}>
           <h1 style={{ fontSize: "22px", fontWeight: 900, color: "#2563eb", margin: 0, letterSpacing: "-0.5px" }}>
             Multi<span style={{ color: "#ffffff", fontWeight: 300, fontSize: "18px" }}>reserve</span>
           </h1>
-          <div 
+          <div
             style={{
               marginTop: "12px",
               display: "inline-flex",
@@ -95,24 +93,23 @@ export default function Sidebar({ isOpen }: SidebarProps) {
               fontWeight: 700,
               letterSpacing: "0.5px",
               textTransform: "uppercase",
-              ...getRoleBadgeStyles(user.role)
+              ...getRoleBadgeStyles(user.role),
             }}
           >
             {user.role === "CLIENT" ? "Cliente Final" : user.role}
           </div>
         </div>
 
-        {/* NAVEGACIÓN DINÁMICA */}
         <nav style={{ padding: "12px", display: "flex", flexDirection: "column", gap: "4px", boxSizing: "border-box" }}>
           {menu.map((item) => {
-            const active = location.pathname === item.path;
-            const isHovered = hoveredPath === item.path;
+            const active = currentPage === item.page;
+            const isHovered = hoveredPath === item.page;
 
             return (
               <button
-                key={item.path}
-                onClick={() => navigate(item.path)}
-                onMouseEnter={() => setHoveredPath(item.path)}
+                key={item.page}
+                onClick={() => onNavigate(item.page)}
+                onMouseEnter={() => setHoveredPath(item.page)}
                 onMouseLeave={() => setHoveredPath(null)}
                 style={{
                   display: "flex",
@@ -128,21 +125,19 @@ export default function Sidebar({ isOpen }: SidebarProps) {
                   fontWeight: active ? 600 : 500,
                   transition: "all 0.2s ease",
                   boxSizing: "border-box",
-                  backgroundColor: active 
-                    ? "#2563eb" 
-                    : isHovered 
-                    ? "rgba(255, 255, 255, 0.03)" 
-                    : "transparent",
+                  backgroundColor: active ? "#2563eb" : isHovered ? "rgba(255, 255, 255, 0.03)" : "transparent",
                   color: active ? "#ffffff" : isHovered ? "#ffffff" : "#a1a1aa",
-                  boxShadow: active ? "0 4px 14px rgba(37, 99, 235, 0.3)" : "none"
+                  boxShadow: active ? "0 4px 14px rgba(37, 99, 235, 0.3)" : "none",
                 }}
               >
-                <div style={{ 
-                  display: "flex", 
-                  alignItems: "center", 
-                  color: active ? "#ffffff" : isHovered ? "#2563eb" : "#a1a1aa",
-                  transition: "color 0.2s ease"
-                }}>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    color: active ? "#ffffff" : isHovered ? "#2563eb" : "#a1a1aa",
+                    transition: "color 0.2s ease",
+                  }}
+                >
                   {item.icon}
                 </div>
                 <span style={{ whiteSpace: "nowrap" }}>{item.name}</span>
@@ -152,12 +147,10 @@ export default function Sidebar({ isOpen }: SidebarProps) {
         </nav>
       </div>
 
-      {/* PIE DEL SIDEBAR */}
       <div style={{ borderTop: "1px solid rgba(255, 255, 255, 0.03)", padding: "12px", boxSizing: "border-box" }}>
         <button
           onClick={() => {
             logout();
-            navigate("/login");
           }}
           onMouseEnter={() => setLogoutHover(true)}
           onMouseLeave={() => setLogoutHover(false)}
@@ -175,7 +168,7 @@ export default function Sidebar({ isOpen }: SidebarProps) {
             transition: "all 0.2s ease",
             boxSizing: "border-box",
             backgroundColor: logoutHover ? "rgba(239, 68, 68, 0.1)" : "transparent",
-            color: logoutHover ? "#ef4444" : "#a1a1aa"
+            color: logoutHover ? "#ef4444" : "#a1a1aa",
           }}
         >
           <div style={{ display: "flex", alignItems: "center" }}>
@@ -183,7 +176,17 @@ export default function Sidebar({ isOpen }: SidebarProps) {
           </div>
           <span style={{ whiteSpace: "nowrap" }}>Cerrar sesión</span>
         </button>
-        <p style={{ textAlign: "center", fontSize: "10px", color: "#3f3f46", marginTop: "16px", marginBottom: "4px", fontFamily: "monospace", letterSpacing: "0.5px" }}>
+        <p
+          style={{
+            textAlign: "center",
+            fontSize: "10px",
+            color: "#3f3f46",
+            marginTop: "16px",
+            marginBottom: "4px",
+            fontFamily: "monospace",
+            letterSpacing: "0.5px",
+          }}
+        >
           MultiReserve v1.0
         </p>
       </div>

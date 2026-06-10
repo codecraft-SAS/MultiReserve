@@ -7,8 +7,8 @@ multireserve/.project
 multireserve/*.log
 
 # Backend
-reservas-web/node_modules/
-reservas-web/dist/
+node_modules
+dist
 reservas-web/.env
 
 # Editor e IDEs

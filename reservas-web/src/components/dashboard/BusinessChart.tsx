@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import api from "../../api/axios";
+import { http } from "../../api/http";
 
 interface CategoryData {
   name: string;
@@ -28,11 +28,11 @@ export function BusinessChart() {
     const fetchCategoryStats = async () => {
       try {
         setLoading(true);
-        const response = await api.get<[string, number][]>('/reports/categories');
+        const response = await http<[string, number][]>('/reports/categories');
 
-        if (response.data && response.data.length > 0) {
-          const maxCount = Math.max(...response.data.map(item => item[1]), 1);
-          const parsedData = response.data.map((item, index) => {
+        if (response && response.length > 0) {
+          const maxCount = Math.max(...response.map(item => item[1]), 1);
+          const parsedData = response.map((item, index) => {
             const raw = item[0] || "OTROS";
             const label = CATEGORY_LABELS[raw.toUpperCase()] || raw.charAt(0).toUpperCase() + raw.slice(1).toLowerCase();
             return {

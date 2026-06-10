@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import api from "../../api/axios"; 
+import { http } from "../../api/http"; 
 import toast from "react-hot-toast";
 import { ArrowLeft, Sliders, Image as ImageIcon } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
@@ -10,8 +9,7 @@ interface Business {
   name: string;
 }
 
-export default function CreateResourceForm() {
-  const navigate = useNavigate();
+export default function CreateResourceForm({ onNavigate }: { onNavigate: (page: string) => void }) {
   const { user } = useAuth();
   const isEmployee = user?.role === "EMPLOYEE";
   const [loading, setLoading] = useState(false);
@@ -41,12 +39,12 @@ export default function CreateResourceForm() {
     if (isEmployee) return;
     const fetchBusinesses = async () => {
       try {
-        const response = await api.get("/businesses");
-        setBusinesses(response.data);
-        if (response.data.length > 0) {
+        const response = await http<any[]>("/businesses");
+        setBusinesses(response);
+        if (response.length > 0) {
           setFormData(prev => ({
             ...prev,
-            businessId: response.data[0].id
+            businessId: response[0].id
           }));
         }
       } catch (error) {
@@ -77,9 +75,9 @@ export default function CreateResourceForm() {
     };
 
     try {
-      await api.post("/resources", payload);
+      await http("/resources", { method: "POST", body: JSON.stringify(payload) });
       toast.success("¡Recurso creado exitosamente!");
-      navigate(isEmployee ? "/employee/resources" : "/admin/resources");
+      onNavigate(isEmployee ? "/employee/resources" : "/admin/resources");
     } catch (err: any) {
       console.error("Error en el servidor:", err);
       const backendMessage = err.response?.data?.message || "Error al crear el recurso";
@@ -91,7 +89,7 @@ export default function CreateResourceForm() {
 
   return (
     <div style={{ maxWidth: "600px", margin: "0 auto", padding: "20px", color: "#ffffff" }}>
-      <button onClick={() => navigate(-1)} style={{ display: "flex", alignItems: "center", gap: "8px", backgroundColor: "transparent", border: "none", color: "#a1a1aa", cursor: "pointer", marginBottom: "20px", fontSize: "14px" }}>
+      <button onClick={() => onNavigate(isEmployee ? "/employee/resources" : "/admin/resources")} style={{ display: "flex", alignItems: "center", gap: "8px", backgroundColor: "transparent", border: "none", color: "#a1a1aa", cursor: "pointer", marginBottom: "20px", fontSize: "14px" }}>
         <ArrowLeft size={16} /> Volver
       </button>
 

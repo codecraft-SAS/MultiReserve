@@ -1,96 +1,123 @@
-import { Routes, Route, Navigate } from "react-router-dom";
+import { useState, useEffect } from "react";
 import { Toaster } from "react-hot-toast";
-
-// Layout principal
 import MainLayout from "./layouts/MainLayout";
-
-// Componente de protección de rutas
-import PrivateRoute from "./routes/PrivateRoute";
-
-// Páginas públicas
+import { useAuth } from "./context/AuthContext";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 
-// Páginas de ADMINISTRADOR
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import ManageBusinesses from "./pages/admin/ManageBusinesses";
 import CreateBusinessForm from "./pages/admin/CreateBusinessForm";
-import EditBusinessForm from "./pages/admin/EditBusinessForm"; 
+import EditBusinessForm from "./pages/admin/EditBusinessForm";
 import CreateResourceForm from "./pages/admin/CreateResourceForm";
-import UserManagement from "./pages/admin/UserManagement"; 
-import ReportsManagement from "./pages/admin/ReportsManagement"; 
+import UserManagement from "./pages/admin/UserManagement";
+import ReportsManagement from "./pages/admin/ReportsManagement";
 
-// Módulos operativos vinculados
 import ResourceManagement from "./pages/ResourceManagement";
 import ReservationManagement from "./pages/ReservationManagement";
+import EmployeePanel from "./pages/EmployeePanel";
 
-// Páginas de EMPLEADO
-import EmployeePanel from "./pages/EmployeePanel"; 
-
-// Páginas de CLIENTE e Interfaz General de Cuenta
 import BusinessCatalog from "./pages/BusinessCatalog";
 import ClientReservations from "./pages/ClientReservations";
 import { ProfilePage } from "./pages/ProfilePage";
 
+function getPageFromHash() {
+  const hash = window.location.hash.replace("#", "");
+  return hash || "/admin/dashboard";
+}
+
 function App() {
+  const { user } = useAuth();
+  const [page, setPage] = useState(getPageFromHash());
+  const [showLogin, setShowLogin] = useState(true);
+  const [editBusinessId, setEditBusinessId] = useState<number | null>(null);
+
+  const role = user?.role?.toUpperCase();
+
+  useEffect(() => {
+    const onHashChange = () => setPage(getPageFromHash());
+    window.addEventListener("hashchange", onHashChange);
+    return () => window.removeEventListener("hashchange", onHashChange);
+  }, []);
+
+  function handleLoginSuccess(userRole: string) {
+    setShowLogin(false);
+    const defaultPage = userRole === "ADMIN"
+      ? "/admin/dashboard"
+      : userRole === "EMPLOYEE"
+        ? "/employee/dashboard"
+        : "/client/catalog";
+    setPage(defaultPage);
+    window.location.hash = defaultPage;
+  }
+
+  function navigateTo(p: string, editId?: number) {
+    if (editId !== undefined) setEditBusinessId(editId);
+    setPage(p);
+    window.location.hash = p;
+  }
+
+  if (!user) {
+    if (window.location.hash) window.location.hash = "";
+    return (
+      <>
+        <Toaster position="top-right" toastOptions={{ style: { background: "#1f2937", color: "#fff" } }} />
+        {showLogin ? (
+          <LoginPage onSuccess={handleLoginSuccess} onGoToRegister={() => setShowLogin(false)} />
+        ) : (
+          <RegisterPage
+            onSuccess={(r) => {
+              if (r === "LOGIN") setShowLogin(true);
+              else handleLoginSuccess(r);
+            }}
+          />
+        )}
+      </>
+    );
+  }
+
+  function renderContent() {
+    const route = page.split("/").slice(2).join("/");
+    switch (route) {
+      case "dashboard":
+        return role === "ADMIN" ? <AdminDashboard /> : <EmployeePanel />;
+      case "businesses":
+        return <ManageBusinesses onNavigate={(p, id) => navigateTo(p, id)} />;
+      case "create-business":
+        return <CreateBusinessForm onNavigate={() => navigateTo("/admin/businesses")} />;
+      case "edit-business":
+        return <EditBusinessForm businessId={editBusinessId} onNavigate={() => navigateTo("/admin/businesses")} />;
+      case "resources":
+        return <ResourceManagement onNavigate={(p) => navigateTo(p)} />;
+      case "create-resource":
+        return <CreateResourceForm onNavigate={(p) => navigateTo(p)} />;
+      case "reservations":
+        return <ReservationManagement />;
+      case "users":
+        return <UserManagement />;
+      case "reports":
+        return <ReportsManagement />;
+      case "catalog":
+        return <BusinessCatalog />;
+      case "my-reservations":
+        return <ClientReservations />;
+      case "profile":
+        return <ProfilePage />;
+      default:
+        return role === "ADMIN"
+          ? <AdminDashboard />
+          : role === "EMPLOYEE"
+            ? <EmployeePanel />
+            : <BusinessCatalog />;
+    }
+  }
+
   return (
     <>
-      {/* Proveedor global de notificaciones */}
-      <Toaster position="top-right" toastOptions={{ style: { background: '#1f2937', color: '#fff' } }} />
-
-      <Routes>
-        {/* Redirección inicial */}
-        <Route path="/" element={<Navigate to="/login" replace />} />
-
-        {/* Rutas públicas */}
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
-
-        {/* 👑 PANEL DE ADMINISTRADOR (Protegido) */}
-        <Route element={<PrivateRoute allowedRoles={['ADMIN']} />}>
-          <Route path="/admin" element={<MainLayout />}>
-            <Route path="dashboard" element={<AdminDashboard />} />
-            <Route path="businesses" element={<ManageBusinesses />} />
-            <Route path="create-business" element={<CreateBusinessForm />} />
-            <Route path="edit-business/:id" element={<EditBusinessForm />} /> 
-
-            {/* Rutas de control operativo, personal y estadísticas */}
-            <Route path="resources" element={<ResourceManagement />} />
-            <Route path="create-resource" element={<CreateResourceForm />} />
-            <Route path="reservations" element={<ReservationManagement />} />
-            <Route path="users" element={<UserManagement />} /> 
-            <Route path="reports" element={<ReportsManagement />} /> 
-            
-            {/* Ruta añadida para el perfil del Administrador */}
-            <Route path="profile" element={<ProfilePage />} /> 
-          </Route>
-        </Route>
-
-        {/* 🧑‍💼 PANEL DE EMPLEADO (Protegido) */}
-        <Route element={<PrivateRoute allowedRoles={['EMPLOYEE']} />}>
-          <Route path="/employee" element={<MainLayout />}>
-            <Route path="dashboard" element={<EmployeePanel />} />
-            <Route path="resources" element={<ResourceManagement />} />
-            <Route path="create-resource" element={<CreateResourceForm />} />
-            <Route path="reservations" element={<ReservationManagement />} />
-            <Route path="profile" element={<ProfilePage />} /> 
-          </Route>
-        </Route>
-
-        {/* 👤 PANEL DE CLIENTE (Protegido) */}
-        <Route element={<PrivateRoute allowedRoles={['CLIENT']} />}>
-          <Route path="/client" element={<MainLayout />}>
-            <Route path="catalog" element={<BusinessCatalog />} />
-            <Route path="my-reservations" element={<ClientReservations />} />
-            
-            {/* Ruta añadida para el perfil del Cliente */}
-            <Route path="profile" element={<ProfilePage />} /> 
-          </Route>
-        </Route>
-
-        {/* Comodín para rutas no encontradas o accesos no autorizados */}
-        <Route path="*" element={<Navigate to="/login" replace />} />
-      </Routes>
+      <Toaster position="top-right" toastOptions={{ style: { background: "#1f2937", color: "#fff" } }} />
+      <MainLayout currentPage={page} onNavigate={setPage}>
+        {renderContent()}
+      </MainLayout>
     </>
   );
 }

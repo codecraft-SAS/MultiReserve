@@ -1,20 +1,26 @@
-import { useState } from "react";
-import { Navigate, Outlet } from "react-router-dom";
+import { useState, type ReactNode } from "react";
 import { useAuth } from "../context/AuthContext";
 import Header from "../components/layout/Header";
 import Sidebar from "../components/layout/Sidebar";
 
-export default function MainLayout() {
+export default function MainLayout({
+  currentPage,
+  onNavigate,
+  children,
+}: {
+  currentPage: string;
+  onNavigate: (page: string) => void;
+  children: ReactNode;
+}) {
   const { user } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
-  // Guardarraíl directo: Si no hay usuario activo, redirigir inmediatamente
   if (!user) {
-    return <Navigate to="/login" replace />;
+    return null;
   }
 
   return (
-    <div 
+    <div
       style={{
         height: "100vh",
         width: "100vw",
@@ -24,15 +30,12 @@ export default function MainLayout() {
         overflow: "hidden",
         userSelect: "none",
         fontFamily: "system-ui, -apple-system, sans-serif",
-        boxSizing: "border-box"
+        boxSizing: "border-box",
       }}
     >
-      
-      {/* Sidebar - Mantiene su estado y se acopla al flujo */}
-      <Sidebar isOpen={sidebarOpen} />
+      <Sidebar isOpen={sidebarOpen} currentPage={currentPage} onNavigate={onNavigate} />
 
-      {/* Contenedor Secundario (Header + Área de Contenido) */}
-      <div 
+      <div
         style={{
           flex: 1,
           display: "flex",
@@ -41,29 +44,25 @@ export default function MainLayout() {
           height: "100%",
           overflow: "hidden",
           position: "relative",
-          backgroundColor: "#09090b"
+          backgroundColor: "#09090b",
         }}
       >
-        
-        {/* Header - Barra superior unificada con transparencias */}
         <Header sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
 
-        {/* Área Principal de Scroll para las Vistas (Dashboard, Catálogo, etc.) */}
-        <main 
-          className="view-scrollbar"
+        <main
           style={{
             flex: 1,
             overflowY: "auto",
             width: "100%",
             backgroundColor: "#09090b",
             display: "flex",
-            flexDirection: "column"
+            flexDirection: "column",
           }}
         >
-          <div 
+          <div
             style={{
               flex: 1,
-              maxWidth: "1280px", // max-w-7xl
+              maxWidth: "1280px",
               width: "100%",
               marginLeft: "auto",
               marginRight: "auto",
@@ -71,16 +70,12 @@ export default function MainLayout() {
               boxSizing: "border-box",
               display: "flex",
               flexDirection: "column",
-              gap: "24px" // space-y-6 alternativo
+              gap: "24px",
             }}
           >
-            
-            {/* Aquí se inyectan dinámicamente las páginas del panel */}
-            <Outlet />
-            
+            {children}
           </div>
         </main>
-        
       </div>
     </div>
   );

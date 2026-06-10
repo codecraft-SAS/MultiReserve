@@ -4,8 +4,8 @@ import {
   Mail, Shield, X, Edit2, Trash2, Building2, Lock
 } from "lucide-react";
 import toast from "react-hot-toast";
-import { getAllUsers, createUserFromAdmin, updateUserFromAdmin, deleteUserFromAdmin } from "../../services/userService";
-import { getBusinesses } from "../../services/businessService";
+import { usersApi } from "../../api/users";
+import { businessesApi } from "../../api/businesses";
 import type { Business } from "../../types/Business";
 import { ConfirmModal } from "../../components/ConfirmModal";
 
@@ -13,7 +13,7 @@ interface UserSystem {
   id?: number;
   fullName: string;
   email: string;
-  role: "ADMIN" | "EMPLOYEE" | "CLIENT";
+  role: string;
   password?: string;
   businessId?: number | null;
 }
@@ -32,12 +32,12 @@ export default function UserManagement() {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState<"ADMIN" | "EMPLOYEE" | "CLIENT">("EMPLOYEE");
+  const [role, setRole] = useState<string>("EMPLOYEE");
   const [businessId, setBusinessId] = useState<number | null>(null);
 
   const fetchUsers = async () => {
     try {
-      const data = await getAllUsers();
+      const data = await usersApi.list();
       setUsers(data);
     } catch (error) {
       console.error("Error al traer usuarios:", error);
@@ -47,7 +47,7 @@ export default function UserManagement() {
 
   const fetchBusinesses = async () => {
     try {
-      const data = await getBusinesses();
+      const data = await businessesApi.list();
       setBusinesses(data);
     } catch (error) {
       console.error("Error al cargar negocios:", error);
@@ -100,7 +100,7 @@ export default function UserManagement() {
   const executeDelete = async () => {
     if (!confirmDelete) return;
     try {
-      await deleteUserFromAdmin(confirmDelete.id);
+      await usersApi.remove(confirmDelete.id);
       setUsers(users.filter(user => user.id !== confirmDelete.id));
       toast.success("Usuario eliminado de la base de datos.");
     } catch (error) {
@@ -119,21 +119,21 @@ export default function UserManagement() {
       return;
     }
 
-    const payload: UserSystem = {
+    const payload = {
       fullName,
       email,
       role,
       ...(password && { password }),
-      ...(role === "EMPLOYEE" ? { businessId: businessId ?? null } : {})
+      ...(role === "EMPLOYEE" ? { businessId: businessId ?? undefined } : {})
     };
 
     try {
       if (isEditing && selectedUserId) {
-        const updatedUser = await updateUserFromAdmin(selectedUserId, payload);
+        const updatedUser = await usersApi.update(selectedUserId, payload);
         setUsers(users.map(u => u.id === selectedUserId ? updatedUser : u));
         toast.success("Usuario actualizado correctamente.");
       } else {
-        const createdUser = await createUserFromAdmin(payload);
+        const createdUser = await usersApi.create(payload as any);
         setUsers([createdUser, ...users]);
         toast.success(`Usuario con rol de ${role} guardado con éxito.`);
       }

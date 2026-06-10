@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import api from "../api/axios"; 
+import { http } from "../api/http"; 
 import toast from "react-hot-toast";
 import { 
   CalendarCheck, 
@@ -54,8 +54,8 @@ export default function ReservationManagement() {
   const fetchReservations = async () => {
     try {
       setLoading(true);
-      const response = await api.get<Reservation[]>("/reservations");
-      setReservations(Array.isArray(response.data) ? response.data : []);
+      const response = await http<Reservation[]>("/reservations");
+      setReservations(Array.isArray(response) ? response : []);
     } catch (err: any) {
       console.error("Error al cargar reservas:", err);
       toast.error("No se pudieron sincronizar las reservas del servidor");
@@ -77,8 +77,8 @@ export default function ReservationManagement() {
     if (!confirmAction) return;
     const { id, status: newStatus } = confirmAction;
     try {
-      await api.patch(`/reservations/${id}/status`, null, {
-        params: { value: newStatus }
+      await http(`/reservations/${id}/status?value=${newStatus}`, {
+        method: "PATCH"
       });
       
       setReservations(prev => 

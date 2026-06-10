@@ -1,7 +1,6 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import api from "../../api/axios";
+import { http } from "../../api/http";
 import toast from "react-hot-toast";
 import { ArrowLeft, Save, Building2, Image as ImageIcon } from "lucide-react";
 
@@ -19,9 +18,8 @@ interface CreateBusinessFormData {
   active: boolean;
 }
 
-export default function CreateBusinessForm() {
-  const navigate = useNavigate();
-  useAuth(); // Mantenemos el hook por si maneja protecciones de ruta, pero quitamos el 'user' sin usar
+export default function CreateBusinessForm({ onNavigate }: { onNavigate: () => void }) {
+  useAuth();
 
   const [formData, setFormData] = useState<CreateBusinessFormData>({
     name: "",
@@ -54,10 +52,10 @@ export default function CreateBusinessForm() {
         active: formData.active,
       };
 
-      await api.post("/businesses", payload);
+      await http("/businesses", { method: "POST", body: JSON.stringify(payload) });
 
       toast.success("¡Negocio creado exitosamente!");
-      navigate("/admin/businesses");
+      onNavigate();
     } catch (err: any) {
       const errorMsg = err?.response?.data?.message || "Hubo un problema al guardar el negocio";
       toast.error(errorMsg);
@@ -71,7 +69,7 @@ export default function CreateBusinessForm() {
     <div style={{ maxWidth: "600px", margin: "0 auto", padding: "20px", color: "#ffffff" }}>
       {/* Botón Volver */}
       <button 
-        onClick={() => navigate("/admin/businesses")} 
+        onClick={() => onNavigate()} 
         style={{ display: "flex", alignItems: "center", gap: "8px", backgroundColor: "transparent", border: "none", color: "#a1a1aa", cursor: "pointer", marginBottom: "20px", fontSize: "14px" }}
       >
         <ArrowLeft size={16} /> Volver a la gestión de negocios
@@ -263,7 +261,7 @@ export default function CreateBusinessForm() {
           <button 
             type="button" 
             disabled={submitting} 
-            onClick={() => navigate("/admin/businesses")} 
+            onClick={() => onNavigate()} 
             style={{ padding: "12px 20px", borderRadius: "8px", border: "1px solid rgba(255, 255, 255, 0.08)", backgroundColor: "transparent", color: "#a1a1aa", fontWeight: 600, cursor: "pointer", fontSize: "14px" }}
           >
             Cancelar

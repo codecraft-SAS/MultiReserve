@@ -25,7 +25,7 @@ export const getStatusBadgeStyles = (status: ReservationStatus): string => {
 /**
  * Retorna la traducción directa del estado al español.
  */
-export const getStatusText = (status: ReservationStatus): string => {
+export const getStatusText = (status: string): string => {
   switch (status) {
     case "CONFIRMED":
       return "Confirmada";

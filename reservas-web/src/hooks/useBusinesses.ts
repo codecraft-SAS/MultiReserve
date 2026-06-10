@@ -1,11 +1,7 @@
 import { useState, useEffect } from "react";
 import type { Business } from "../types/Business";
 import toast from "react-hot-toast";
-import {
-  getBusinesses,
-  toggleBusinessStatus as toggleBusinessStatusApi,
-  deleteBusiness as deleteBusinessApi,
-} from "../services/businessService";
+import { businessesApi } from "../api/businesses";
 
 export const useBusinesses = () => {
   const [businesses, setBusinesses] = useState<Business[]>([]);
@@ -16,7 +12,7 @@ export const useBusinesses = () => {
   const fetchBusinesses = async () => {
     try {
       setLoading(true);
-      const data = await getBusinesses();
+      const data = await businessesApi.list();
       setBusinesses(data);
     } catch (err: any) {
       setError(err.message || "Error al obtener negocios");
@@ -33,7 +29,7 @@ export const useBusinesses = () => {
   // ✅ Activar/Desactivar negocio
   const toggleBusinessStatus = async (id: number, currentStatus: boolean) => {
     try {
-      await toggleBusinessStatusApi(id);
+      await businessesApi.toggleStatus(id);
       toast.success(
         currentStatus ? "Negocio desactivado con éxito" : "Negocio activado con éxito"
       );
@@ -47,7 +43,7 @@ export const useBusinesses = () => {
   // 🗑️ Eliminar negocio
   const deleteBusiness = async (id: number) => {
     try {
-      await deleteBusinessApi(id);
+      await businessesApi.remove(id);
       toast.success("Negocio eliminado con éxito");
       fetchBusinesses();
     } catch (err: any) {

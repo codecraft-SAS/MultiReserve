@@ -1,14 +1,11 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
 import toast from "react-hot-toast";
 import { useAuth } from "../context/AuthContext";
 import { Eye, EyeOff } from "lucide-react";
 
-export default function RegisterPage() {
-  const navigate = useNavigate();
-  const { register } = useAuth(); 
+export default function RegisterPage({ onSuccess }: { onSuccess: (role: string) => void }) {
+  const { register } = useAuth();
 
-  // Estados del Formulario
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -37,14 +34,12 @@ export default function RegisterPage() {
 
     try {
       setLoading(true);
-      
-      // ✅ Sincronizado exactamente con tu AuthContext: (fullName, email, password, role)
-      await register(name, email, password, "CLIENT");
-      
+
+      await register({ fullName: name, email, password, role: "CLIENT" });
+
       toast.success("¡Cuenta creada con éxito! Bienvenido.");
-      navigate("/client/catalog");
-    } catch (error) {
-      console.error(error);
+      onSuccess("CLIENT");
+    } catch {
       toast.error("Error al registrarse. El correo podría estar en uso o hubo un fallo en el servidor.");
     } finally {
       setLoading(false);
@@ -52,7 +47,7 @@ export default function RegisterPage() {
   };
 
   return (
-    <div 
+    <div
       style={{
         minHeight: "100vh",
         width: "100vw",
@@ -69,42 +64,37 @@ export default function RegisterPage() {
         backgroundPosition: "center",
         backgroundRepeat: "no-repeat",
         boxSizing: "border-box",
-        padding: "40px 20px"
+        padding: "40px 20px",
       }}
     >
-      {/* CAPA DE OSCURECIMIENTO EXTRA */}
       <div style={{ position: "absolute", inset: 0, backgroundColor: "rgba(0, 0, 0, 0.4)", zIndex: 1, pointerEvents: "none" }} />
 
-      {/* HEADER: Logo superior izquierdo */}
       <header style={{ position: "absolute", top: "24px", left: "40px", zIndex: 10 }}>
         <span style={{ fontSize: "28px", fontWeight: 900, color: "#2563eb", letterSpacing: "-1px", textTransform: "uppercase" }}>
           Multi<span style={{ color: "#ffffff", fontWeight: 300, fontSize: "22px", letterSpacing: "0px", textTransform: "lowercase" }}>reserve</span>
         </span>
       </header>
 
-      {/* TARJETA CENTRADA: Formulario Estilo Netflix */}
-      <main 
-        style={{ 
-          position: "relative", 
-          zIndex: 10, 
-          width: "100%", 
-          maxWidth: "450px", 
-          backgroundColor: "rgba(0, 0, 0, 0.85)", 
-          borderRadius: "8px", 
-          padding: "50px 68px", 
+      <main
+        style={{
+          position: "relative",
+          zIndex: 10,
+          width: "100%",
+          maxWidth: "450px",
+          backgroundColor: "rgba(0, 0, 0, 0.85)",
+          borderRadius: "8px",
+          padding: "50px 68px",
           boxSizing: "border-box",
           boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.5)",
           marginTop: "40px",
-          marginBottom: "40px"
+          marginBottom: "40px",
         }}
       >
         <h2 style={{ fontSize: "32px", fontWeight: 700, color: "#ffffff", margin: "0 0 28px 0", letterSpacing: "-0.5px" }}>
-          Regístrate
+          Crear cuenta
         </h2>
 
         <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-          
-          {/* Input Nombre */}
           <div style={{ position: "relative" }}>
             <input
               type="text"
@@ -121,14 +111,13 @@ export default function RegisterPage() {
                 fontSize: "16px",
                 fontWeight: 500,
                 boxSizing: "border-box",
-                outline: "none"
+                outline: "none",
               }}
               disabled={loading}
               required
             />
           </div>
 
-          {/* Input Email */}
           <div style={{ position: "relative" }}>
             <input
               type="email"
@@ -145,18 +134,17 @@ export default function RegisterPage() {
                 fontSize: "16px",
                 fontWeight: 500,
                 boxSizing: "border-box",
-                outline: "none"
+                outline: "none",
               }}
               disabled={loading}
               required
             />
           </div>
 
-          {/* Input Contraseña */}
           <div style={{ position: "relative" }}>
             <input
               type={showPassword ? "text" : "password"}
-              placeholder="Contraseña (mín. 6 caracteres)"
+              placeholder="Contraseña"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               style={{
@@ -169,7 +157,7 @@ export default function RegisterPage() {
                 fontSize: "16px",
                 fontWeight: 500,
                 boxSizing: "border-box",
-                outline: "none"
+                outline: "none",
               }}
               disabled={loading}
               required
@@ -187,14 +175,13 @@ export default function RegisterPage() {
                 color: "#8c8c8c",
                 cursor: "pointer",
                 display: "flex",
-                alignItems: "center"
+                alignItems: "center",
               }}
             >
               {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
             </button>
           </div>
 
-          {/* Input Confirmar Contraseña */}
           <div style={{ position: "relative" }}>
             <input
               type={showConfirmPassword ? "text" : "password"}
@@ -211,7 +198,7 @@ export default function RegisterPage() {
                 fontSize: "16px",
                 fontWeight: 500,
                 boxSizing: "border-box",
-                outline: "none"
+                outline: "none",
               }}
               disabled={loading}
               required
@@ -229,14 +216,13 @@ export default function RegisterPage() {
                 color: "#8c8c8c",
                 cursor: "pointer",
                 display: "flex",
-                alignItems: "center"
+                alignItems: "center",
               }}
             >
               {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
             </button>
           </div>
 
-          {/* Botón de Registro */}
           <button
             type="submit"
             disabled={loading}
@@ -252,42 +238,38 @@ export default function RegisterPage() {
               cursor: loading ? "not-allowed" : "pointer",
               transition: "background-color 0.2s",
               marginTop: "12px",
-              boxShadow: "0 4px 12px rgba(37, 99, 235, 0.2)"
+              boxShadow: "0 4px 12px rgba(37, 99, 235, 0.2)",
             }}
           >
-            {loading ? "Creando cuenta..." : "Registrarse"}
+            {loading ? "Creando cuenta..." : "Crear cuenta"}
           </button>
         </form>
 
-        {/* Footer interno */}
-        <div style={{ marginTop: "40px", fontSize: "14px", color: "#737373" }}>
+        <div style={{ marginTop: "32px", fontSize: "14px", color: "#737373", textAlign: "center" }}>
           <p style={{ margin: "0" }}>
-            ¿Ya tienes una cuenta?{" "}
-            <Link 
-              to="/login" 
-              style={{ color: "#ffffff", textDecoration: "none", fontWeight: 500 }}
-              onMouseEnter={(e) => (e.currentTarget.style.textDecoration = "underline")}
-              onMouseLeave={(e) => (e.currentTarget.style.textDecoration = "none")}
+            ¿Ya tienes cuenta?{" "}
+            <span
+              onClick={() => onSuccess("LOGIN")}
+              style={{ color: "#ffffff", textDecoration: "none", fontWeight: 500, cursor: "pointer" }}
             >
-              Inicia sesión aquí
-            </Link>
+              Inicia sesión
+            </span>
           </p>
         </div>
       </main>
 
-      {/* FOOTER GENERAL */}
-      <footer 
-        style={{ 
-          position: "absolute", 
-          bottom: 0, 
-          width: "100%", 
-          backgroundColor: "rgba(0,0,0,0.8)", 
-          borderTop: "1px solid #222222", 
-          padding: "16px 0", 
-          textAlign: "center", 
-          fontSize: "12px", 
+      <footer
+        style={{
+          position: "absolute",
+          bottom: 0,
+          width: "100%",
+          backgroundColor: "rgba(0,0,0,0.8)",
+          borderTop: "1px solid #222222",
+          padding: "16px 0",
+          textAlign: "center",
+          fontSize: "12px",
           color: "#555555",
-          zIndex: 10
+          zIndex: 10,
         }}
       >
         MultiReserve Corporation &copy; {new Date().getFullYear()} - Todos los derechos reservados.

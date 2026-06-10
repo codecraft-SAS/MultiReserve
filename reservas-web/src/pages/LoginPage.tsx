@@ -1,14 +1,11 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
 import toast from "react-hot-toast";
 import { useAuth } from "../context/AuthContext";
 import { Eye, EyeOff } from "lucide-react";
 
-export default function LoginPage() {
-  const navigate = useNavigate();
+export default function LoginPage({ onSuccess, onGoToRegister }: { onSuccess: (role: string) => void; onGoToRegister?: () => void }) {
   const { login } = useAuth();
 
-  // Estados del Formulario
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
@@ -25,25 +22,14 @@ export default function LoginPage() {
 
     try {
       setLoading(true);
-      
-      // ✅ Sincronizado con tu AuthContext actualizado (envía el objeto DTO)
+
       const userData = await login({ email, password });
-      
+
       toast.success("¡Bienvenido de nuevo!");
 
-      // 🌟 CORRECCIÓN DE RUTAS Y ROLES:
-      // Usamos toUpperCase() por seguridad en caso de que el backend devuelva "client" o "admin"
-      const userRole = userData?.role?.toUpperCase();
-
-      if (userRole === "ADMIN") {
-        navigate("/admin/dashboard");
-      } else if (userRole === "EMPLOYEE") {
-        navigate("/employee/dashboard");
-      } else {
-        navigate("/client/catalog");
-      }
-    } catch (error) {
-      console.error(error);
+      const userRole = (userData?.role ?? "").toUpperCase();
+      onSuccess(userRole);
+    } catch {
       toast.error("Credenciales incorrectas. Revisa tu correo y contraseña.");
     } finally {
       setLoading(false);
@@ -51,7 +37,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div 
+    <div
       style={{
         minHeight: "100vh",
         width: "100vw",
@@ -68,33 +54,30 @@ export default function LoginPage() {
         backgroundPosition: "center",
         backgroundRepeat: "no-repeat",
         boxSizing: "border-box",
-        padding: "40px 20px"
+        padding: "40px 20px",
       }}
     >
-      {/* CAPA DE OSCURECIMIENTO EXTRA */}
       <div style={{ position: "absolute", inset: 0, backgroundColor: "rgba(0, 0, 0, 0.4)", zIndex: 1, pointerEvents: "none" }} />
 
-      {/* HEADER: Logo superior izquierdo */}
       <header style={{ position: "absolute", top: "24px", left: "40px", zIndex: 10 }}>
         <span style={{ fontSize: "28px", fontWeight: 900, color: "#2563eb", letterSpacing: "-1px", textTransform: "uppercase" }}>
           Multi<span style={{ color: "#ffffff", fontWeight: 300, fontSize: "22px", letterSpacing: "0px", textTransform: "lowercase" }}>reserve</span>
         </span>
       </header>
 
-      {/* TARJETA CENTRADA: Formulario Estilo Netflix */}
-      <main 
-        style={{ 
-          position: "relative", 
-          zIndex: 10, 
-          width: "100%", 
-          maxWidth: "450px", 
-          backgroundColor: "rgba(0, 0, 0, 0.85)", 
-          borderRadius: "8px", 
-          padding: "50px 68px", 
+      <main
+        style={{
+          position: "relative",
+          zIndex: 10,
+          width: "100%",
+          maxWidth: "450px",
+          backgroundColor: "rgba(0, 0, 0, 0.85)",
+          borderRadius: "8px",
+          padding: "50px 68px",
           boxSizing: "border-box",
           boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.5)",
           marginTop: "40px",
-          marginBottom: "40px"
+          marginBottom: "40px",
         }}
       >
         <h2 style={{ fontSize: "32px", fontWeight: 700, color: "#ffffff", margin: "0 0 28px 0", letterSpacing: "-0.5px" }}>
@@ -102,8 +85,6 @@ export default function LoginPage() {
         </h2>
 
         <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-          
-          {/* Input Email */}
           <div style={{ position: "relative" }}>
             <input
               type="email"
@@ -120,14 +101,13 @@ export default function LoginPage() {
                 fontSize: "16px",
                 fontWeight: 500,
                 boxSizing: "border-box",
-                outline: "none"
+                outline: "none",
               }}
               disabled={loading}
               required
             />
           </div>
 
-          {/* Input Contraseña */}
           <div style={{ position: "relative" }}>
             <input
               type={showPassword ? "text" : "password"}
@@ -144,7 +124,7 @@ export default function LoginPage() {
                 fontSize: "16px",
                 fontWeight: 500,
                 boxSizing: "border-box",
-                outline: "none"
+                outline: "none",
               }}
               disabled={loading}
               required
@@ -162,26 +142,24 @@ export default function LoginPage() {
                 color: "#8c8c8c",
                 cursor: "pointer",
                 display: "flex",
-                alignItems: "center"
+                alignItems: "center",
               }}
             >
               {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
             </button>
           </div>
 
-          {/* Checkbox Recordarme */}
           <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "14px", color: "#737373", padding: "0 4px" }}>
-            <input 
-              type="checkbox" 
+            <input
+              type="checkbox"
               id="rememberMe"
-              checked={rememberMe} 
+              checked={rememberMe}
               onChange={(e) => setRememberMe(e.target.checked)}
               style={{ cursor: "pointer", accentColor: "#2563eb" }}
             />
             <label htmlFor="rememberMe" style={{ cursor: "pointer", userSelect: "none" }}>Recordarme</label>
           </div>
 
-          {/* Botón de Inicio de Sesión */}
           <button
             type="submit"
             disabled={loading}
@@ -197,42 +175,40 @@ export default function LoginPage() {
               cursor: loading ? "not-allowed" : "pointer",
               transition: "background-color 0.2s",
               marginTop: "12px",
-              boxShadow: "0 4px 12px rgba(37, 99, 235, 0.2)"
+              boxShadow: "0 4px 12px rgba(37, 99, 235, 0.2)",
             }}
           >
             {loading ? "Iniciando sesión..." : "Iniciar sesión"}
           </button>
         </form>
 
-        {/* Footer interno */}
         <div style={{ marginTop: "40px", fontSize: "14px", color: "#737373" }}>
           <p style={{ margin: "0" }}>
             ¿Primera vez en MultiReserve?{" "}
-            <Link 
-              to="/register" 
-              style={{ color: "#ffffff", textDecoration: "none", fontWeight: 500 }}
+            <button
+              onClick={onGoToRegister}
+              style={{ color: "#ffffff", textDecoration: "none", fontWeight: 500, background: "none", border: "none", cursor: "pointer", fontSize: "14px", padding: 0 }}
               onMouseEnter={(e) => (e.currentTarget.style.textDecoration = "underline")}
               onMouseLeave={(e) => (e.currentTarget.style.textDecoration = "none")}
             >
               Suscríbete ahora
-            </Link>
+            </button>
           </p>
         </div>
       </main>
 
-      {/* FOOTER GENERAL */}
-      <footer 
-        style={{ 
-          position: "absolute", 
-          bottom: 0, 
-          width: "100%", 
-          backgroundColor: "rgba(0,0,0,0.8)", 
-          borderTop: "1px solid #222222", 
-          padding: "16px 0", 
-          textAlign: "center", 
-          fontSize: "12px", 
+      <footer
+        style={{
+          position: "absolute",
+          bottom: 0,
+          width: "100%",
+          backgroundColor: "rgba(0,0,0,0.8)",
+          borderTop: "1px solid #222222",
+          padding: "16px 0",
+          textAlign: "center",
+          fontSize: "12px",
           color: "#555555",
-          zIndex: 10
+          zIndex: 10,
         }}
       >
         MultiReserve Corporation &copy; {new Date().getFullYear()} - Todos los derechos reservados.

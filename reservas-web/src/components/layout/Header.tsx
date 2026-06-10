@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Menu, X, Bell, UserCircle, LogOut } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 
 interface HeaderProps {
@@ -10,41 +9,35 @@ interface HeaderProps {
 
 export default function Header({ sidebarOpen, setSidebarOpen }: HeaderProps) {
   const { user, logout } = useAuth();
-  const navigate = useNavigate();
 
-  // Estados locales para los efectos hover reactivos
   const [menuHover, setMenuHover] = useState(false);
   const [bellHover, setBellHover] = useState(false);
   const [logoutHover, setLogoutHover] = useState(false);
 
   const handleLogout = () => {
     logout();
-    navigate("/login");
   };
 
   return (
     <header
       style={{
         height: "64px",
-        backgroundColor: "rgba(15, 15, 15, 0.75)", // Fondo oscuro translúcido premium
+        backgroundColor: "rgba(15, 15, 15, 0.75)",
         backdropFilter: "blur(12px)",
         WebkitBackdropFilter: "blur(12px)",
         borderBottom: "1px solid rgba(255, 255, 255, 0.05)",
         display: "flex",
-        flexDirection: "row",       // Asegura flujo horizontal estricto
-        alignItems: "center",       // Alineación vertical perfecta al centro
+        flexDirection: "row",
+        alignItems: "center",
         justifyContent: "space-between",
         padding: "0 24px",
         position: "relative",
         zIndex: 40,
         boxSizing: "border-box",
-        width: "100%"
+        width: "100%",
       }}
     >
-      {/* ─── SECCIÓN IZQUIERDA: CONTROL Y MARCA ─── */}
       <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-        
-        {/* Botón de control del Sidebar */}
         <button
           onClick={() => setSidebarOpen(!sidebarOpen)}
           onMouseEnter={() => setMenuHover(true)}
@@ -59,13 +52,12 @@ export default function Header({ sidebarOpen, setSidebarOpen }: HeaderProps) {
             alignItems: "center",
             justifyContent: "center",
             padding: "6px",
-            borderRadius: "6px"
+            borderRadius: "6px",
           }}
         >
           {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
         </button>
 
-        {/* Identificador de Marca en Header */}
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
           <div
             style={{
@@ -79,7 +71,7 @@ export default function Header({ sidebarOpen, setSidebarOpen }: HeaderProps) {
               fontWeight: 900,
               fontSize: "12px",
               color: "#ffffff",
-              boxShadow: "0 4px 12px rgba(37, 99, 235, 0.3)"
+              boxShadow: "0 4px 12px rgba(37, 99, 235, 0.3)",
             }}
           >
             MR
@@ -95,10 +87,7 @@ export default function Header({ sidebarOpen, setSidebarOpen }: HeaderProps) {
         </div>
       </div>
 
-      {/* ─── SECCIÓN DERECHA: ACCIONES Y PERFIL DE USUARIO ─── */}
       <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
-        
-        {/* Alertas / Notificaciones */}
         <button
           onMouseEnter={() => setBellHover(true)}
           onMouseLeave={() => setBellHover(false)}
@@ -111,7 +100,7 @@ export default function Header({ sidebarOpen, setSidebarOpen }: HeaderProps) {
             transition: "color 0.2s",
             display: "flex",
             alignItems: "center",
-            padding: "6px"
+            padding: "6px",
           }}
         >
           <Bell size={18} />
@@ -127,15 +116,13 @@ export default function Header({ sidebarOpen, setSidebarOpen }: HeaderProps) {
               height: "6px",
               borderRadius: "50%",
               backgroundColor: "#2563eb",
-              animation: "pulseAlert 2s infinite"
+              animation: "pulseAlert 2s infinite",
             }}
           />
         </button>
 
-        {/* Separador sutil */}
         <div style={{ width: "1px", backgroundColor: "rgba(255,255,255,0.08)", height: "20px" }} />
 
-        {/* Datos del Administrador / Empleado logueado */}
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
           <UserCircle size={28} style={{ color: "#e4e4e7" }} />
           <div style={{ display: "flex", flexDirection: "column", textAlign: "left" }}>
@@ -147,7 +134,6 @@ export default function Header({ sidebarOpen, setSidebarOpen }: HeaderProps) {
             </span>
           </div>
 
-          {/* Tag de Rol Estilizado */}
           <span
             style={{
               marginLeft: "6px",
@@ -158,14 +144,13 @@ export default function Header({ sidebarOpen, setSidebarOpen }: HeaderProps) {
               backgroundColor: "rgba(37, 99, 235, 0.12)",
               color: "#3b82f6",
               border: "1px solid rgba(37, 99, 235, 0.2)",
-              letterSpacing: "0.5px"
+              letterSpacing: "0.5px",
             }}
           >
             {user?.role || "ADMIN"}
           </span>
         </div>
 
-        {/* Botón "Salir" integrado y estilizado */}
         <button
           onClick={handleLogout}
           onMouseEnter={() => setLogoutHover(true)}
@@ -182,13 +167,12 @@ export default function Header({ sidebarOpen, setSidebarOpen }: HeaderProps) {
             cursor: "pointer",
             transition: "all 0.2s ease",
             fontSize: "12px",
-            fontWeight: 600
+            fontWeight: 600,
           }}
         >
           <LogOut size={14} />
           <span>Salir</span>
         </button>
-
       </div>
     </header>
   );

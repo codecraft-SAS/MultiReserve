@@ -2,9 +2,8 @@ import { useEffect, useState, useMemo } from "react";
 import { Loader2, MapPin, Calendar, X, Info, Store, Layers } from "lucide-react";
 import type { Business } from "../types/Business";
 import type { Resource } from "../types/Resource";
-import { getActiveBusinesses, searchBusinesses } from "../services/businessService";
-import { getResourcesByBusiness } from "../services/resourceService";
-import { getResourceAvailability } from "../services/reservationService";
+import { businessesApi } from "../api/businesses";
+import { resourcesApi } from "../api/resources";
 import { useReservations } from "../hooks/useReservations";
 import { useAuth } from "../context/AuthContext";
 import toast from "react-hot-toast";
@@ -99,7 +98,7 @@ export default function BusinessCatalog() {
   const loadBusinesses = async () => {
     try {
       setLoading(true);
-      const data = await getActiveBusinesses();
+      const data = await businessesApi.getActive();
       setBusinesses(data);
     } catch (error) {
       console.error("Error al cargar negocios:", error);
@@ -117,7 +116,7 @@ export default function BusinessCatalog() {
     e.preventDefault();
     setLoading(true);
     try {
-      const data = search.trim() ? await searchBusinesses(search) : await getActiveBusinesses();
+      const data = search.trim() ? await businessesApi.search(search) : await businessesApi.getActive();
       setBusinesses(data);
     } catch (error) {
       console.error("Error al buscar:", error);
@@ -136,7 +135,7 @@ export default function BusinessCatalog() {
     setAmountPaid(0);
     setOccupiedHours([]);
     try {
-      const data = await getResourcesByBusiness(business.id);
+      const data = await resourcesApi.getByBusiness(business.id);
       setResources(data);
     } catch (error) {
       console.error("Error al cargar recursos:", error);
@@ -154,7 +153,7 @@ export default function BusinessCatalog() {
     if (!selectedResource || !date) return;
 
     try {
-      const busyTimes = await getResourceAvailability(selectedResource.id, date);
+      const busyTimes = await resourcesApi.getAvailability(selectedResource.id, date);
       setOccupiedHours(busyTimes);
     } catch (error) {
       console.error("Error al chequear disponibilidad:", error);
@@ -380,7 +379,7 @@ export default function BusinessCatalog() {
             </button>
 
             <div style={{ display: "flex", flexDirection: "column", gap: "4px", marginBottom: "20px" }}>
-              <span style={{ fontSize: "11px", color: "#2563eb", fontWeight: 700, textTransform: "uppercase" }}>{formatCategory(selectedBusiness.category)}</span>
+              <span style={{ fontSize: "11px", color: "#2563eb", fontWeight: 700, textTransform: "uppercase" }}>{formatCategory(selectedBusiness.category || "")}</span>
               <h2 style={{ fontSize: "24px", fontWeight: 800, margin: 0 }}>{selectedBusiness.name}</h2>
               <p style={{ fontSize: "14px", color: "#a1a1aa", margin: 0 }}>{selectedBusiness.description}</p>
             </div>
