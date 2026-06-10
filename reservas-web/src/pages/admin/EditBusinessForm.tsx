@@ -92,7 +92,7 @@ export default function EditBusinessForm() {
   }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "24px", width: "100%", maxWidth: "650px", margin: "0 auto", boxSizing: "border-box", color: "#ffffff" }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: "24px", width: "100%", maxWidth: "600px", margin: "0 auto", boxSizing: "border-box", color: "#ffffff" }}>
       
       {/* Encabezado */}
       <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
@@ -109,9 +109,9 @@ export default function EditBusinessForm() {
       </div>
 
       {/* Formulario Completo */}
-      <form onSubmit={handleSubmit} style={{ backgroundColor: "#131314", border: "1px solid rgba(255,255,255,0.03)", borderRadius: "16px", padding: "28px", display: "flex", flexDirection: "column", gap: "20px" }} autoComplete="off">
+      <form onSubmit={handleSubmit} style={{ backgroundColor: "rgba(23, 23, 23, 0.6)", border: "1px solid rgba(255, 255, 255, 0.04)", borderRadius: "16px", padding: "28px", display: "flex", flexDirection: "column", gap: "20px" }} autoComplete="off">
         
-        <span style={{ fontSize: "11px", fontWeight: 700, color: "#4b5563", letterSpacing: "0.05em" }}>INFORMACIÓN BASE</span>
+        <span style={{ fontSize: "11px", fontWeight: 700, color: "#52525b", letterSpacing: "0.05em" }}>INFORMACIÓN BASE</span>
 
         {/* Nombre y Categoría en paralelo */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
@@ -123,7 +123,7 @@ export default function EditBusinessForm() {
               required
               value={formData.name} 
               onChange={handleChange}
-              style={{ backgroundColor: "rgba(23, 23, 23, 0.4)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "10px", padding: "12px", color: "#fff", fontSize: "14px", outline: "none" }} 
+              style={{ backgroundColor: "#111111", border: "1px solid rgba(255, 255, 255, 0.08)", borderRadius: "8px", padding: "12px", color: "#ffffff", fontSize: "14px", outline: "none", width: "100%", boxSizing: "border-box" }} 
             />
           </div>
 
@@ -134,7 +134,7 @@ export default function EditBusinessForm() {
               required
               value={formData.category} 
               onChange={handleChange}
-              style={{ backgroundColor: "#1c1c1e", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "10px", padding: "12px", color: "#fff", fontSize: "14px", outline: "none" }}
+              style={{ backgroundColor: "#111111", border: "1px solid rgba(255, 255, 255, 0.08)", borderRadius: "8px", padding: "12px", color: "#ffffff", fontSize: "14px", outline: "none", colorScheme: "dark", width: "100%", boxSizing: "border-box" }}
             >
               <option value="RESTAURANT">🍔 Restaurante</option>
               <option value="DEPORTE">⚽ Canchas Sintéticas / Deporte</option>
@@ -152,11 +152,11 @@ export default function EditBusinessForm() {
             value={formData.description} 
             onChange={handleChange}
             placeholder="Describe detalladamente los servicios..."
-            style={{ backgroundColor: "rgba(23, 23, 23, 0.4)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "10px", padding: "12px", color: "#fff", fontSize: "14px", outline: "none", resize: "none", fontFamily: "inherit" }} 
+            style={{ backgroundColor: "#111111", border: "1px solid rgba(255, 255, 255, 0.08)", borderRadius: "8px", padding: "12px", color: "#ffffff", fontSize: "14px", outline: "none", resize: "none", fontFamily: "inherit", width: "100%", boxSizing: "border-box" }} 
           />
         </div>
 
-        <span style={{ fontSize: "11px", fontWeight: 700, color: "#4b5563", letterSpacing: "0.05em", marginTop: "10px" }}>📍 UBICACIÓN</span>
+        <span style={{ fontSize: "11px", fontWeight: 700, color: "#52525b", letterSpacing: "0.05em", marginTop: "10px" }}>📍 UBICACIÓN</span>
 
         {/* Ciudad y Dirección */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
@@ -168,7 +168,7 @@ export default function EditBusinessForm() {
               required
               value={formData.city} 
               onChange={handleChange}
-              style={{ backgroundColor: "rgba(23, 23, 23, 0.4)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "10px", padding: "12px", color: "#fff", fontSize: "14px", outline: "none" }} 
+              style={{ backgroundColor: "#111111", border: "1px solid rgba(255, 255, 255, 0.08)", borderRadius: "8px", padding: "12px", color: "#ffffff", fontSize: "14px", outline: "none", width: "100%", boxSizing: "border-box" }} 
             />
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
@@ -179,12 +179,12 @@ export default function EditBusinessForm() {
               required
               value={formData.address} 
               onChange={handleChange}
-              style={{ backgroundColor: "rgba(23, 23, 23, 0.4)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "10px", padding: "12px", color: "#fff", fontSize: "14px", outline: "none" }} 
+              style={{ backgroundColor: "#111111", border: "1px solid rgba(255, 255, 255, 0.08)", borderRadius: "8px", padding: "12px", color: "#ffffff", fontSize: "14px", outline: "none", width: "100%", boxSizing: "border-box" }} 
             />
           </div>
         </div>
 
-        <span style={{ fontSize: "11px", fontWeight: 700, color: "#4b5563", letterSpacing: "0.05em", marginTop: "10px" }}>📞 CONTACTO</span>
+        <span style={{ fontSize: "11px", fontWeight: 700, color: "#52525b", letterSpacing: "0.05em", marginTop: "10px" }}>📞 CONTACTO</span>
 
         {/* Teléfono y Correo */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
@@ -195,7 +195,7 @@ export default function EditBusinessForm() {
               name="phone"
               value={formData.phone} 
               onChange={handleChange}
-              style={{ backgroundColor: "rgba(23, 23, 23, 0.4)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "10px", padding: "12px", color: "#fff", fontSize: "14px", outline: "none" }} 
+              style={{ backgroundColor: "#111111", border: "1px solid rgba(255, 255, 255, 0.08)", borderRadius: "8px", padding: "12px", color: "#ffffff", fontSize: "14px", outline: "none", width: "100%", boxSizing: "border-box" }} 
             />
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
@@ -205,12 +205,12 @@ export default function EditBusinessForm() {
               name="email"
               value={formData.email} 
               onChange={handleChange}
-              style={{ backgroundColor: "rgba(23, 23, 23, 0.4)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "10px", padding: "12px", color: "#fff", fontSize: "14px", outline: "none" }} 
+              style={{ backgroundColor: "#111111", border: "1px solid rgba(255, 255, 255, 0.08)", borderRadius: "8px", padding: "12px", color: "#ffffff", fontSize: "14px", outline: "none", width: "100%", boxSizing: "border-box" }} 
             />
           </div>
         </div>
 
-        <span style={{ fontSize: "11px", fontWeight: 700, color: "#4b5563", letterSpacing: "0.05em", marginTop: "10px" }}>🖼️ MULTIMEDIA E IDENTIDAD</span>
+        <span style={{ fontSize: "11px", fontWeight: 700, color: "#52525b", letterSpacing: "0.05em", marginTop: "10px" }}>🖼️ MULTIMEDIA E IDENTIDAD</span>
 
         {/* URL de la Imagen */}
         <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
@@ -220,7 +220,7 @@ export default function EditBusinessForm() {
             name="imageUrl"
             value={formData.imageUrl} 
             onChange={handleChange}
-            style={{ backgroundColor: "rgba(23, 23, 23, 0.4)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "10px", padding: "12px", color: "#fff", fontSize: "14px", outline: "none" }} 
+            style={{ backgroundColor: "#111111", border: "1px solid rgba(255, 255, 255, 0.08)", borderRadius: "8px", padding: "12px", color: "#ffffff", fontSize: "14px", outline: "none", width: "100%", boxSizing: "border-box" }} 
           />
         </div>
 

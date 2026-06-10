@@ -52,7 +52,8 @@ public class Business {
     @Column(length = 120)
     private String email;
 
-    // Imagen
+    // Imagen (soporta base64)
+    @Column(columnDefinition = "TEXT")
     private String imageUrl;
 
     // Activo / Inactivo
@@ -83,6 +84,12 @@ public class Business {
     // =========================
     @OneToMany(mappedBy = "business", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Resource> resources = new ArrayList<>();
+
+    // =========================
+    // EMPLEADOS DEL NEGOCIO
+    // =========================
+    @OneToMany(mappedBy = "business")
+    private List<User> employees = new ArrayList<>();
 
     // =========================
     // GETTERS AND SETTERS
@@ -206,5 +213,13 @@ public class Business {
 
     public void setResources(List<Resource> resources) {
         this.resources = resources;
+    }
+
+    public List<User> getEmployees() {
+        return employees;
+    }
+
+    public void setEmployees(List<User> employees) {
+        this.employees = employees;
     }
 }

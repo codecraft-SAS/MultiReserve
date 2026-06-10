@@ -1,14 +1,25 @@
 import { useReservations } from "../hooks/useReservations";
-import { useEffect, useState } from "react"; 
-import { Calendar, Clock, MapPin, Layers, AlertCircle, CalendarX, Trash2, XCircle } from "lucide-react";
+import { useEffect, useState, useCallback } from "react"; 
+import { Calendar, Clock, MapPin, Layers, AlertCircle, CalendarX, Trash2, XCircle, RefreshCw } from "lucide-react";
 import { formatDate } from "../utils/formatDate"; 
 import { formatCurrency } from "../utils/formatCurrency";
 import type { Reservation } from "../types/Reservation"; 
-import { getStatusBadgeStyles, getStatusText } from "../utils/statusColor";
+import { getStatusText } from "../utils/statusColor";
+import { statusBadges } from "../utils/colors";
 import toast from "react-hot-toast";
 
 export default function ClientReservations() {
-  const { reservations, loading, cancelExistingReservation } = useReservations();
+  const { reservations, loading, cancelExistingReservation, refresh } = useReservations();
+
+  // Refetch al recibir foco (el empleado pudo haber cambiado el estado en otra pestaña)
+  const handleFocus = useCallback(() => {
+    refresh();
+  }, [refresh]);
+
+  useEffect(() => {
+    window.addEventListener("focus", handleFocus);
+    return () => window.removeEventListener("focus", handleFocus);
+  }, [handleFocus]);
 
   // 🛠️ Estados para el modal de advertencia de cancelación
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
@@ -102,13 +113,19 @@ export default function ClientReservations() {
           <div className="p-2 bg-zinc-900 rounded-xl border border-zinc-800" style={{ backgroundColor: '#18181b', padding: '8px', borderRadius: '12px', border: '1px solid #27272a' }}>
             <Calendar className="text-blue-500" size={20} style={{ color: '#3b82f6' }} />
           </div>
-          <h1 className="text-2xl font-extrabold text-white tracking-tight sm:text-3xl" style={{ fontSize: '1.75rem', fontWeight: 800 }}>
-            Mis Reservas
-          </h1>
-        </div>
+          <div className="flex items-center gap-2" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <h1 className="text-2xl font-extrabold text-white tracking-tight sm:text-3xl" style={{ fontSize: '1.75rem', fontWeight: 800 }}>
+              Mis Reservas
+            </h1>
+            <button onClick={refresh} title="Actualizar" style={{ display: "inline-flex", alignItems: "center", gap: "6px", backgroundColor: "rgba(37, 99, 235, 0.1)", border: "1px solid rgba(37, 99, 235, 0.25)", borderRadius: "8px", padding: "6px 14px", color: "#3b82f6", fontSize: "13px", fontWeight: 600, cursor: "pointer" }}>
+              <RefreshCw size={13} />
+              Actualizar
+            </button>
+          </div>
         <p className="text-zinc-400 text-xs sm:text-sm max-w-3xl leading-relaxed" style={{ color: '#a1a1aa', marginTop: '8px' }}>
           Administra y supervisa tus solicitudes de reserva, controla sus estados operativos y coberturas asignadas.
         </p>
+      </div>
       </div>
 
       {/* ─── ESTADO VACÍO O MAPEO ─── */}
@@ -173,8 +190,7 @@ export default function ClientReservations() {
                       Colombia
                     </span>
 
-                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-zinc-900/50 border border-zinc-800/40 ${getStatusBadgeStyles(res.status)}`}
-                          style={{ padding: '2px 10px', borderRadius: '9999px', fontSize: '11px', fontWeight: 'bold', letterSpacing: '0.05em' }}>
+                    <span style={statusBadges[res.status] || statusBadges.PENDING}>
                       {getStatusText(res.status)}
                     </span>
                   </div>
@@ -310,7 +326,7 @@ export default function ClientReservations() {
         }}>
           <div style={{
             backgroundColor: "#0c0c0e", border: "1px solid rgba(239, 68, 68, 0.2)",
-            borderRadius: "16px", padding: "32px", width: "440px", display: "flex", flexDirection: "column", gap: "24px",
+            borderRadius: "16px", padding: "32px", width: "100%", maxWidth: "440px", display: "flex", flexDirection: "column", gap: "24px",
             boxShadow: "0 25px 50px -12px rgba(239, 68, 68, 0.15)"
           }}>
             {/* Encabezado del Modal */}
@@ -383,7 +399,7 @@ export default function ClientReservations() {
         }}>
           <div style={{
             backgroundColor: "#0c0c0e", border: "1px solid rgba(239, 68, 68, 0.4)",
-            borderRadius: "16px", padding: "32px", width: "440px", display: "flex", flexDirection: "column", gap: "24px",
+            borderRadius: "16px", padding: "32px", width: "100%", maxWidth: "440px", display: "flex", flexDirection: "column", gap: "24px",
             boxShadow: "0 25px 50px -12px rgba(239, 68, 68, 0.25)"
           }}>
             {/* Encabezado Peligro */}

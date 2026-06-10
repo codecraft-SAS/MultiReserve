@@ -171,8 +171,8 @@ export default function BusinessCatalog() {
     const clientName = user?.fullName || user?.email || "Cliente Registrado";
     const resourceTypeVal = selectedResource.type || selectedBusiness?.category || "DEPORTIVO";
 
-    const formattedStart = `${reserveDate}T${startTime}:00`;
-    const formattedEnd = `${reserveDate}T${endTime}:00`;
+    const formattedStart = `${startTime}:00`;
+    const formattedEnd = `${endTime}:00`;
 
     const finalPaymentMethod = selectedPaymentMethod === "nequi" 
       ? "NEQUI - 3147455770" 
@@ -189,6 +189,7 @@ export default function BusinessCatalog() {
       startTime: formattedStart,
       endTime: formattedEnd,
       purpose: purpose.trim() || "Reserva de cliente",
+      businessId: selectedBusiness?.id,
       amountPaid: amountPaid,
       paymentMethod: finalPaymentMethod
     });
@@ -213,10 +214,18 @@ export default function BusinessCatalog() {
     }
   };
 
-  const availableTimeSlots = [
-    "08:00", "09:00", "10:00", "11:00", "12:00", "13:00",
-    "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00", "21:00"
-  ];
+  const availableTimeSlots = useMemo(() => {
+    const open = selectedResource?.openingHour;
+    const close = selectedResource?.closingHour;
+    if (!open || !close || open === "00:00" || close === "00:00") return [];
+    const openHour = parseInt(open.split(":")[0], 10);
+    const closeHour = parseInt(close.split(":")[0], 10);
+    const slots: string[] = [];
+    for (let h = openHour; h <= closeHour; h++) {
+      slots.push(`${String(h).padStart(2, "0")}:00`);
+    }
+    return slots;
+  }, [selectedResource]);
 
   if (loading) {
     return (
@@ -427,18 +436,18 @@ export default function BusinessCatalog() {
                   min={new Date().toISOString().split("T")[0]}
                   value={reserveDate}
                   onChange={(e) => handleDateChange(e.target.value)}
-                  style={{ width: "100%", backgroundColor: "#111111", border: "1px solid #27272a", borderRadius: "8px", padding: "10px", color: "#ffffff", outline: "none" }}
+                  style={{ width: "100%", backgroundColor: "#111111", border: "1px solid #27272a", borderRadius: "8px", padding: "12px", color: "#ffffff", outline: "none", colorScheme: "dark" }}
                 />
 
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
                   <select
                     disabled={!reserveDate}
                     value={startTime}
                     onChange={(e) => { setStartTime(e.target.value); setEndTime(""); setAmountPaid(0); }}
-                    style={{ width: "100%", backgroundColor: "#111111", border: "1px solid #27272a", borderRadius: "8px", padding: "10px", color: "#ffffff", outline: "none" }}
+                    style={{ width: "100%", backgroundColor: "#111111", border: "1px solid #27272a", borderRadius: "8px", padding: "12px", color: "#ffffff", outline: "none", colorScheme: "dark" }}
                   >
                     <option value="">Inicio</option>
-                    {availableTimeSlots.map((slot) => {
+                    {availableTimeSlots.filter((_, idx, arr) => idx < arr.length - 1).map((slot) => {
                       const busy = occupiedHours.includes(slot);
                       return <option key={slot} value={slot} disabled={busy}>{slot} {busy ? "🔒 (Ocupado)" : ""}</option>;
                     })}
@@ -448,7 +457,7 @@ export default function BusinessCatalog() {
                     disabled={!startTime}
                     value={endTime}
                     onChange={(e) => { setEndTime(e.target.value); setAmountPaid(0); }}
-                    style={{ width: "100%", backgroundColor: "#111111", border: "1px solid #27272a", borderRadius: "8px", padding: "10px", color: "#ffffff", outline: "none" }}
+                    style={{ width: "100%", backgroundColor: "#111111", border: "1px solid #27272a", borderRadius: "8px", padding: "12px", color: "#ffffff", outline: "none", colorScheme: "dark" }}
                   >
                     <option value="">Fin</option>
                     {availableTimeSlots.filter((slot) => slot > startTime).map((slot) => {
@@ -491,7 +500,7 @@ export default function BusinessCatalog() {
                       placeholder="Ej. 25000"
                       value={amountPaid || ""}
                       onChange={(e) => setAmountPaid(Number(e.target.value))}
-                      style={{ backgroundColor: "#18181b", border: "1px solid #27272a", borderRadius: "6px", padding: "8px", color: "#ffffff", outline: "none" }}
+                      style={{ backgroundColor: "#18181b", border: "1px solid #27272a", borderRadius: "6px", padding: "8px", color: "#ffffff", outline: "none", width: "100%" }}
                     />
                   </div>
 

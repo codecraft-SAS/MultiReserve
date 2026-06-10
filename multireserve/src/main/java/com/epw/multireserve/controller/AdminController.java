@@ -18,7 +18,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.epw.multireserve.dto.CreateUserRequest;
 import com.epw.multireserve.dto.UserResponse;
+import com.epw.multireserve.entity.Business;
 import com.epw.multireserve.entity.User;
+import com.epw.multireserve.repository.BusinessRepository;
 import com.epw.multireserve.repository.UserRepository;
 
 import jakarta.validation.Valid;
@@ -29,13 +31,16 @@ public class AdminController {
 
     private final UserRepository repository;
     private final PasswordEncoder passwordEncoder;
+    private final BusinessRepository businessRepository;
 
     public AdminController(
             UserRepository repository,
-            PasswordEncoder passwordEncoder) {
+            PasswordEncoder passwordEncoder,
+            BusinessRepository businessRepository) {
 
         this.repository = repository;
         this.passwordEncoder = passwordEncoder;
+        this.businessRepository = businessRepository;
     }
 
     // ==========================================
@@ -59,13 +64,15 @@ public class AdminController {
                 .role(request.getRole())
                 .build();
 
+        if (request.getBusinessId() != null) {
+            Business business = businessRepository.findById(request.getBusinessId())
+                    .orElseThrow(() -> new IllegalArgumentException("Business not found with id: " + request.getBusinessId()));
+            user.setBusiness(business);
+        }
+
         User savedUser = repository.save(user);
 
-        UserResponse dto = new UserResponse();
-        dto.setId(savedUser.getId());
-        dto.setFullName(savedUser.getFullName());
-        dto.setEmail(savedUser.getEmail());
-        dto.setRole(savedUser.getRole());
+        UserResponse dto = toUserResponse(savedUser);
         return dto;
     }
 
@@ -76,14 +83,7 @@ public class AdminController {
     @PreAuthorize("hasRole('ADMIN')")
     public List<UserResponse> listUsers() {
         return repository.findAll().stream()
-                .map(u -> {
-                    UserResponse dto = new UserResponse();
-                    dto.setId(u.getId());
-                    dto.setFullName(u.getFullName());
-                    dto.setEmail(u.getEmail());
-                    dto.setRole(u.getRole());
-                    return dto;
-                })
+                .map(this::toUserResponse)
                 .toList();
     }
 
@@ -126,14 +126,19 @@ public class AdminController {
             user.setPassword(passwordEncoder.encode(request.getPassword()));
         }
 
+        if (request.getRole() != null && request.getRole().name().equals("EMPLOYEE")) {
+            if (request.getBusinessId() != null) {
+                Business business = businessRepository.findById(request.getBusinessId())
+                        .orElseThrow(() -> new IllegalArgumentException("Business not found with id: " + request.getBusinessId()));
+                user.setBusiness(business);
+            } else {
+                user.setBusiness(null);
+            }
+        }
+
         User updatedUser = repository.save(user);
 
-        UserResponse dto = new UserResponse();
-        dto.setId(updatedUser.getId());
-        dto.setFullName(updatedUser.getFullName());
-        dto.setEmail(updatedUser.getEmail());
-        dto.setRole(updatedUser.getRole());
-        return dto;
+        return toUserResponse(updatedUser);
     }
 
     // ==========================================
@@ -151,5 +156,17 @@ public class AdminController {
             throw new IllegalArgumentException("User not found with id: " + id);
         }
         repository.deleteById(id);
+    }
+
+    private UserResponse toUserResponse(User user) {
+        UserResponse dto = new UserResponse();
+        dto.setId(user.getId());
+        dto.setFullName(user.getFullName());
+        dto.setEmail(user.getEmail());
+        dto.setRole(user.getRole());
+        if (user.getBusiness() != null) {
+            dto.setBusinessId(user.getBusiness().getId());
+        }
+        return dto;
     }
 }

@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../api/axios"; 
 import toast from "react-hot-toast";
-import { ArrowLeft, Save, Sliders, Image as ImageIcon } from "lucide-react";
+import { ArrowLeft, Sliders, Image as ImageIcon } from "lucide-react";
+import { useAuth } from "../../context/AuthContext";
 
 interface Business {
   id: number;
@@ -11,6 +12,8 @@ interface Business {
 
 export default function CreateResourceForm() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const isEmployee = user?.role === "EMPLOYEE";
   const [loading, setLoading] = useState(false);
   const [businesses, setBusinesses] = useState<Business[]>([]);
 
@@ -35,14 +38,11 @@ export default function CreateResourceForm() {
   };
 
   useEffect(() => {
+    if (isEmployee) return;
     const fetchBusinesses = async () => {
       try {
         const response = await api.get("/businesses");
-
-        console.log("Negocios cargados:", response.data);
-
         setBusinesses(response.data);
-
         if (response.data.length > 0) {
           setFormData(prev => ({
             ...prev,
@@ -56,7 +56,7 @@ export default function CreateResourceForm() {
     };
 
     fetchBusinesses();
-  }, []);
+  }, [isEmployee]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -81,7 +81,7 @@ export default function CreateResourceForm() {
     try {
       await api.post("/resources", payload);
       toast.success("¡Recurso creado exitosamente!");
-      navigate("/admin/dashboard");
+      navigate(isEmployee ? "/employee/resources" : "/admin/resources");
     } catch (err: any) {
       console.error("Error en el servidor:", err);
       const backendMessage = err.response?.data?.message || "Error al crear el recurso";
@@ -105,6 +105,7 @@ export default function CreateResourceForm() {
       <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "20px", backgroundColor: "rgba(23, 23, 23, 0.6)", padding: "28px", borderRadius: "16px", border: "1px solid rgba(255, 255, 255, 0.04)" }}>
         
         {/* Selector de Negocio */}
+        {!isEmployee && (
         <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
           <label style={{ fontSize: "13px", fontWeight: 600, color: "#a1a1aa" }}>Asignar al Negocio (ID)</label>
           <select
@@ -122,7 +123,9 @@ export default function CreateResourceForm() {
               borderRadius: "8px",
               padding: "12px",
               color: "#ffffff",
-              outline: "none"
+              outline: "none",
+              colorScheme: "dark",
+              boxSizing: "border-box"
             }}
           >
             {businesses.length === 0 ? (
@@ -139,17 +142,18 @@ export default function CreateResourceForm() {
             )}
           </select>
         </div>
+        )}
 
         {/* Nombre */}
         <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
           <label style={{ fontSize: "13px", fontWeight: 600, color: "#a1a1aa" }}>Nombre del Recurso</label>
-          <input type="text" required placeholder="Ej. Cancha Sintética Premium" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} style={{ width: "100%", backgroundColor: "#111111", border: "1px solid rgba(255, 255, 255, 0.08)", borderRadius: "8px", padding: "12px", color: "#ffffff", outline: "none" }} />
+          <input type="text" required placeholder="Ej. Cancha Sintética Premium" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} style={{ width: "100%", backgroundColor: "#111111", border: "1px solid rgba(255, 255, 255, 0.08)", borderRadius: "8px", padding: "12px", color: "#ffffff", outline: "none", boxSizing: "border-box" }} />
         </div>
 
         {/* Tipo */}
         <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
           <label style={{ fontSize: "13px", fontWeight: 600, color: "#a1a1aa" }}>Tipo de Recurso</label>
-          <select value={formData.type} onChange={(e) => setFormData({ ...formData, type: e.target.value })} style={{ width: "100%", backgroundColor: "#111111", border: "1px solid rgba(255, 255, 255, 0.08)", borderRadius: "8px", padding: "12px", color: "#ffffff", outline: "none" }}>
+          <select value={formData.type} onChange={(e) => setFormData({ ...formData, type: e.target.value })} style={{ width: "100%", backgroundColor: "#111111", border: "1px solid rgba(255, 255, 255, 0.08)", borderRadius: "8px", padding: "12px", color: "#ffffff", outline: "none", colorScheme: "dark", boxSizing: "border-box" }}>
             <option value="COURT">⚽ Cancha / Escenario Deportivo</option>
             <option value="ROOM">🏢 Sala / Salón / Coworking</option>
             <option value="TABLE">🍽️ Mesa / Sector Gastronómico</option>
@@ -176,11 +180,11 @@ export default function CreateResourceForm() {
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
           <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
             <label style={{ fontSize: "13px", fontWeight: 600, color: "#a1a1aa" }}>Capacidad (Personas)</label>
-            <input type="number" required min="1" value={formData.capacity} onChange={(e) => setFormData({ ...formData, capacity: Number(e.target.value) })} style={{ width: "100%", backgroundColor: "#111111", border: "1px solid rgba(255, 255, 255, 0.08)", borderRadius: "8px", padding: "12px", color: "#ffffff", outline: "none" }} />
+            <input type="number" required min="1" value={formData.capacity} onChange={(e) => setFormData({ ...formData, capacity: Number(e.target.value) })} style={{ width: "100%", backgroundColor: "#111111", border: "1px solid rgba(255, 255, 255, 0.08)", borderRadius: "8px", padding: "12px", color: "#ffffff", outline: "none", boxSizing: "border-box" }} />
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
             <label style={{ fontSize: "13px", fontWeight: 600, color: "#a1a1aa" }}>Precio por Hora ($)</label>
-            <input type="number" required min="0" value={formData.pricePerHour} onChange={(e) => setFormData({ ...formData, pricePerHour: Number(e.target.value) })} style={{ width: "100%", backgroundColor: "#111111", border: "1px solid rgba(255, 255, 255, 0.08)", borderRadius: "8px", padding: "12px", color: "#ffffff", outline: "none" }} />
+            <input type="number" required min="0" value={formData.pricePerHour} onChange={(e) => setFormData({ ...formData, pricePerHour: Number(e.target.value) })} style={{ width: "100%", backgroundColor: "#111111", border: "1px solid rgba(255, 255, 255, 0.08)", borderRadius: "8px", padding: "12px", color: "#ffffff", outline: "none", boxSizing: "border-box" }} />
           </div>
         </div>
 
@@ -188,18 +192,18 @@ export default function CreateResourceForm() {
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
           <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
             <label style={{ fontSize: "13px", fontWeight: 600, color: "#a1a1aa" }}>Hora de Apertura</label>
-            <input type="time" required value={formData.openingHour} onChange={(e) => setFormData({ ...formData, openingHour: e.target.value })} style={{ width: "100%", backgroundColor: "#111111", border: "1px solid rgba(255, 255, 255, 0.08)", borderRadius: "8px", padding: "12px", color: "#ffffff", outline: "none" }} />
+            <input type="time" required value={formData.openingHour} onChange={(e) => setFormData({ ...formData, openingHour: e.target.value })} style={{ width: "100%", backgroundColor: "#111111", border: "1px solid rgba(255, 255, 255, 0.08)", borderRadius: "8px", padding: "12px", color: "#ffffff", outline: "none", colorScheme: "dark" }} />
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
             <label style={{ fontSize: "13px", fontWeight: 600, color: "#a1a1aa" }}>Hora de Cierre</label>
-            <input type="time" required value={formData.closingHour} onChange={(e) => setFormData({ ...formData, closingHour: e.target.value })} style={{ width: "100%", backgroundColor: "#111111", border: "1px solid rgba(255, 255, 255, 0.08)", borderRadius: "8px", padding: "12px", color: "#ffffff", outline: "none" }} />
+            <input type="time" required value={formData.closingHour} onChange={(e) => setFormData({ ...formData, closingHour: e.target.value })} style={{ width: "100%", backgroundColor: "#111111", border: "1px solid rgba(255, 255, 255, 0.08)", borderRadius: "8px", padding: "12px", color: "#ffffff", outline: "none", colorScheme: "dark" }} />
           </div>
         </div>
 
         {/* Detalles */}
         <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
           <label style={{ fontSize: "13px", fontWeight: 600, color: "#a1a1aa" }}>Detalles / Especificaciones</label>
-          <textarea rows={3} value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} style={{ width: "100%", backgroundColor: "#111111", border: "1px solid rgba(255, 255, 255, 0.08)", borderRadius: "8px", padding: "12px", color: "#ffffff", outline: "none", resize: "none" }} />
+          <textarea rows={3} value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} style={{ width: "100%", backgroundColor: "#111111", border: "1px solid rgba(255, 255, 255, 0.08)", borderRadius: "8px", padding: "12px", color: "#ffffff", outline: "none", resize: "none", boxSizing: "border-box" }} />
         </div>
 
         <button type="submit" disabled={loading} style={{ marginTop: "10px", padding: "14px", borderRadius: "8px", border: "none", backgroundColor: "#2563eb", color: "#ffffff", fontWeight: 700, cursor: "pointer" }}>

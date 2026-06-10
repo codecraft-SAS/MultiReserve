@@ -17,6 +17,8 @@ import {
   Save,
   X
 } from "lucide-react";
+import { ConfirmModal } from "../components/ConfirmModal";
+import { useAuth } from "../context/AuthContext";
 
 // Modelo de datos real acoplado a las respuestas de Spring Boot 3
 interface Resource {
@@ -36,6 +38,7 @@ interface Resource {
 
 export default function ResourceManagement() {
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   // Estados de datos de la API
   const [resources, setResources] = useState<Resource[]>([]);
@@ -46,6 +49,7 @@ export default function ResourceManagement() {
   const [createHover, setCreateHover] = useState(false);
   const [hoveredCardId, setHoveredCardId] = useState<number | null>(null);
   const [hoveredAction, setHoveredAction] = useState<{ cardId: number, btn: string } | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<{ id: number; name: string } | null>(null);
 
   // Estados para el Modal de Edición
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -71,19 +75,21 @@ export default function ResourceManagement() {
   }, []);
 
   // 2. Eliminar Recurso de forma reactiva
-  const handleDelete = async (id: number, name: string) => {
-    if (!window.confirm(`¿Estás seguro de que deseas eliminar el recurso "${name}"?`)) {
-      return;
-    }
+  const handleDelete = (id: number, name: string) => {
+    setConfirmDelete({ id, name });
+  };
 
+  const executeDelete = async () => {
+    if (!confirmDelete) return;
     try {
-      await api.delete(`/resources/${id}`);
+      await api.delete(`/resources/${confirmDelete.id}`);
       toast.success("Recurso eliminado correctamente");
-      // Actualización reactiva inmediata sin recargar
-      setResources((prev) => prev.filter((r) => r.id !== id));
+      setResources((prev) => prev.filter((r) => r.id !== confirmDelete.id));
     } catch (err: any) {
       const msg = err.response?.data?.message || "No se pudo eliminar el recurso";
       toast.error(msg);
+    } finally {
+      setConfirmDelete(null);
     }
   };
 
@@ -180,29 +186,31 @@ export default function ResourceManagement() {
           </p>
         </div>
 
-        <button
-          onClick={() => navigate("/admin/create-resource")}
-          onMouseEnter={() => setCreateHover(true)}
-          onMouseLeave={() => setCreateHover(false)}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-            padding: "12px 20px",
-            borderRadius: "10px",
-            backgroundColor: createHover ? "#1d4ed8" : "#2563eb",
-            color: "#ffffff",
-            border: "none",
-            fontSize: "14px",
-            fontWeight: 600,
-            cursor: "pointer",
-            transition: "all 0.2s ease",
-            boxShadow: createHover ? "0 8px 24px rgba(37, 99, 235, 0.4)" : "0 4px 12px rgba(37, 99, 235, 0.2)"
-          }}
-        >
-          <Plus size={18} />
-          <span>Nuevo Recurso</span>
-        </button>
+        {user?.role === "ADMIN" && (
+          <button
+            onClick={() => navigate("/admin/create-resource")}
+            onMouseEnter={() => setCreateHover(true)}
+            onMouseLeave={() => setCreateHover(false)}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              padding: "12px 20px",
+              borderRadius: "10px",
+              backgroundColor: createHover ? "#1d4ed8" : "#2563eb",
+              color: "#ffffff",
+              border: "none",
+              fontSize: "14px",
+              fontWeight: 600,
+              cursor: "pointer",
+              transition: "all 0.2s ease",
+              boxShadow: createHover ? "0 8px 24px rgba(37, 99, 235, 0.4)" : "0 4px 12px rgba(37, 99, 235, 0.2)"
+            }}
+          >
+            <Plus size={18} />
+            <span>Nuevo Recurso</span>
+          </button>
+        )}
       </div>
 
       {/* ─── BARRA DE BÚSQUEDA ─── */}
@@ -338,30 +346,30 @@ export default function ResourceManagement() {
         )}
       </div>
 
-      {/* ─── MODAL PREMIUM DE EDICIÓN FLOTANTE ─── */}
+      {/* ─── MODAL DE EDICIÓN ─── */}
       {isEditModalOpen && editingResource && (
-        <div style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0, 0, 0, 0.75)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 50, padding: "20px" }}>
-          <div style={{ backgroundColor: "#0f172a", border: "1px solid #1e293b", borderRadius: "16px", width: "100%", maxWidth: "550px", padding: "24px", boxSizing: "border-box", color: "#fff", maxHeight: "90vh", overflowY: "auto" }}>
+        <div style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0, 0, 0, 0.8)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 50, padding: "20px" }}>
+          <div style={{ backgroundColor: "#141414", border: "1px solid #27272a", borderRadius: "16px", width: "100%", maxWidth: "550px", padding: "24px", boxSizing: "border-box", color: "#e4e4e7", maxHeight: "90vh", overflowY: "auto" }}>
             
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", borderBottom: "1px solid #1e293b", paddingBottom: "12px" }}>
-              <h2 style={{ margin: 0, fontSize: "20px", fontWeight: 700, display: "flex", alignItems: "center", gap: "10px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", borderBottom: "1px solid #27272a", paddingBottom: "12px" }}>
+              <h2 style={{ margin: 0, fontSize: "20px", fontWeight: 700, display: "flex", alignItems: "center", gap: "10px", color: "#ffffff" }}>
                 <Edit3 size={20} style={{ color: "#3b82f6" }} /> Editar Recurso
               </h2>
-              <button onClick={() => setIsEditModalOpen(false)} style={{ backgroundColor: "transparent", border: "none", color: "#64748b", cursor: "pointer" }}>
+              <button onClick={() => setIsEditModalOpen(false)} style={{ backgroundColor: "transparent", border: "none", color: "#71717a", cursor: "pointer", padding: "4px" }}>
                 <X size={20} />
               </button>
             </div>
 
             <form onSubmit={handleUpdateSubmit} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
               <div>
-                <label style={{ fontSize: "12px", color: "#94a3b8", fontWeight: 600 }}>Nombre del Recurso</label>
-                <input type="text" required style={{ width: "100%", backgroundColor: "#020617", border: "1px solid #1e293b", borderRadius: "8px", padding: "10px", color: "#fff", marginTop: "6px", boxSizing: "border-box" }} value={editingResource.name} onChange={(e) => setEditingResource({ ...editingResource, name: e.target.value })} />
+                <label style={{ fontSize: "13px", color: "#a1a1aa", fontWeight: 600 }}>Nombre del Recurso</label>
+                <input type="text" required style={{ width: "100%", backgroundColor: "#111111", border: "1px solid rgba(255, 255, 255, 0.08)", borderRadius: "8px", padding: "12px", color: "#ffffff", marginTop: "6px", boxSizing: "border-box", outline: "none" }} value={editingResource.name} onChange={(e) => setEditingResource({ ...editingResource, name: e.target.value })} />
               </div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
                 <div>
-                  <label style={{ fontSize: "12px", color: "#94a3b8", fontWeight: 600 }}>Categoría / Tipo</label>
-                  <select style={{ width: "100%", backgroundColor: "#020617", border: "1px solid #1e293b", borderRadius: "8px", padding: "10px", color: "#fff", marginTop: "6px", cursor: "pointer" }} value={editingResource.type} onChange={(e) => setEditingResource({ ...editingResource, type: e.target.value as any })}>
+                  <label style={{ fontSize: "13px", color: "#a1a1aa", fontWeight: 600 }}>Categoría / Tipo</label>
+                  <select style={{ width: "100%", backgroundColor: "#111111", border: "1px solid rgba(255, 255, 255, 0.08)", borderRadius: "8px", padding: "12px", color: "#ffffff", marginTop: "6px", cursor: "pointer", outline: "none", colorScheme: "dark", boxSizing: "border-box" }} value={editingResource.type} onChange={(e) => setEditingResource({ ...editingResource, type: e.target.value as any })}>
                     <option value="COURT">Cancha</option>
                     <option value="ROOM">Sala / Salón</option>
                     <option value="CABIN">Cabaña</option>
@@ -369,8 +377,8 @@ export default function ResourceManagement() {
                   </select>
                 </div>
                 <div>
-                  <label style={{ fontSize: "12px", color: "#94a3b8", fontWeight: 600 }}>Estado Operativo</label>
-                  <select style={{ width: "100%", backgroundColor: "#020617", border: "1px solid #1e293b", borderRadius: "8px", padding: "10px", color: "#fff", marginTop: "6px", cursor: "pointer" }} value={editingResource.status} onChange={(e) => setEditingResource({ ...editingResource, status: e.target.value as any })}>
+                  <label style={{ fontSize: "13px", color: "#a1a1aa", fontWeight: 600 }}>Estado Operativo</label>
+                  <select style={{ width: "100%", backgroundColor: "#111111", border: "1px solid rgba(255, 255, 255, 0.08)", borderRadius: "8px", padding: "12px", color: "#ffffff", marginTop: "6px", cursor: "pointer", outline: "none", colorScheme: "dark", boxSizing: "border-box" }} value={editingResource.status} onChange={(e) => setEditingResource({ ...editingResource, status: e.target.value as any })}>
                     <option value="ACTIVE">Disponible</option>
                     <option value="MAINTENANCE">Mantenimiento</option>
                     <option value="INACTIVE">Inactivo</option>
@@ -378,38 +386,38 @@ export default function ResourceManagement() {
                 </div>
               </div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
                 <div>
-                  <label style={{ fontSize: "12px", color: "#94a3b8", fontWeight: 600 }}>Precio por Hora ($)</label>
-                  <input type="number" required min="0" style={{ width: "100%", backgroundColor: "#020617", border: "1px solid #1e293b", borderRadius: "8px", padding: "10px", color: "#fff", marginTop: "6px", boxSizing: "border-box" }} value={editingResource.pricePerHour} onChange={(e) => setEditingResource({ ...editingResource, pricePerHour: Number(e.target.value) || 0 })} />
+                  <label style={{ fontSize: "13px", color: "#a1a1aa", fontWeight: 600 }}>Precio por Hora ($)</label>
+                  <input type="number" required min="0" style={{ width: "100%", backgroundColor: "#111111", border: "1px solid rgba(255, 255, 255, 0.08)", borderRadius: "8px", padding: "12px", color: "#ffffff", marginTop: "6px", boxSizing: "border-box", outline: "none" }} value={editingResource.pricePerHour} onChange={(e) => setEditingResource({ ...editingResource, pricePerHour: Number(e.target.value) || 0 })} />
                 </div>
                 <div>
-                  <label style={{ fontSize: "12px", color: "#94a3b8", fontWeight: 600 }}>Capacidad Máxima</label>
-                  <input type="number" required min="1" style={{ width: "100%", backgroundColor: "#020617", border: "1px solid #1e293b", borderRadius: "8px", padding: "10px", color: "#fff", marginTop: "6px", boxSizing: "border-box" }} value={editingResource.capacity} onChange={(e) => setEditingResource({ ...editingResource, capacity: Number(e.target.value) || 1 })} />
+                  <label style={{ fontSize: "13px", color: "#a1a1aa", fontWeight: 600 }}>Capacidad Máxima</label>
+                  <input type="number" required min="1" style={{ width: "100%", backgroundColor: "#111111", border: "1px solid rgba(255, 255, 255, 0.08)", borderRadius: "8px", padding: "12px", color: "#ffffff", marginTop: "6px", boxSizing: "border-box", outline: "none" }} value={editingResource.capacity} onChange={(e) => setEditingResource({ ...editingResource, capacity: Number(e.target.value) || 1 })} />
                 </div>
               </div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
                 <div>
-                  <label style={{ fontSize: "12px", color: "#94a3b8", fontWeight: 600 }}>Hora Apertura</label>
-                  <input type="time" style={{ width: "100%", backgroundColor: "#020617", border: "1px solid #1e293b", borderRadius: "8px", padding: "10px", color: "#fff", marginTop: "6px", boxSizing: "border-box" }} value={editingResource.openingHour || "06:00"} onChange={(e) => setEditingResource({ ...editingResource, openingHour: e.target.value })} />
+                  <label style={{ fontSize: "13px", color: "#a1a1aa", fontWeight: 600 }}>Hora Apertura</label>
+                  <input type="time" style={{ width: "100%", backgroundColor: "#111111", border: "1px solid rgba(255, 255, 255, 0.08)", borderRadius: "8px", padding: "12px", color: "#ffffff", marginTop: "6px", boxSizing: "border-box", outline: "none", colorScheme: "dark" }} value={editingResource.openingHour || "06:00"} onChange={(e) => setEditingResource({ ...editingResource, openingHour: e.target.value })} />
                 </div>
                 <div>
-                  <label style={{ fontSize: "12px", color: "#94a3b8", fontWeight: 600 }}>Hora Cierre</label>
-                  <input type="time" style={{ width: "100%", backgroundColor: "#020617", border: "1px solid #1e293b", borderRadius: "8px", padding: "10px", color: "#fff", marginTop: "6px", boxSizing: "border-box" }} value={editingResource.closingHour || "22:00"} onChange={(e) => setEditingResource({ ...editingResource, closingHour: e.target.value })} />
+                  <label style={{ fontSize: "13px", color: "#a1a1aa", fontWeight: 600 }}>Hora Cierre</label>
+                  <input type="time" style={{ width: "100%", backgroundColor: "#111111", border: "1px solid rgba(255, 255, 255, 0.08)", borderRadius: "8px", padding: "12px", color: "#ffffff", marginTop: "6px", boxSizing: "border-box", outline: "none", colorScheme: "dark" }} value={editingResource.closingHour || "22:00"} onChange={(e) => setEditingResource({ ...editingResource, closingHour: e.target.value })} />
                 </div>
               </div>
 
               <div>
-                <label style={{ fontSize: "12px", color: "#94a3b8", fontWeight: 600 }}>URL de la Imagen</label>
-                <input type="url" style={{ width: "100%", backgroundColor: "#020617", border: "1px solid #1e293b", borderRadius: "8px", padding: "10px", color: "#fff", marginTop: "6px", boxSizing: "border-box" }} value={editingResource.imageUrl || ""} onChange={(e) => setEditingResource({ ...editingResource, imageUrl: e.target.value })} />
+                <label style={{ fontSize: "13px", color: "#a1a1aa", fontWeight: 600 }}>URL de la Imagen</label>
+                <input type="url" style={{ width: "100%", backgroundColor: "#111111", border: "1px solid rgba(255, 255, 255, 0.08)", borderRadius: "8px", padding: "12px", color: "#ffffff", marginTop: "6px", boxSizing: "border-box", outline: "none" }} value={editingResource.imageUrl || ""} onChange={(e) => setEditingResource({ ...editingResource, imageUrl: e.target.value })} />
               </div>
 
-              <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px", marginTop: "12px" }}>
-                <button type="button" onClick={() => setIsEditModalOpen(false)} style={{ backgroundColor: "transparent", border: "1px solid #334155", color: "#94a3b8", padding: "10px 16px", borderRadius: "8px", cursor: "pointer", fontWeight: 500 }}>
+              <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px", marginTop: "12px", borderTop: "1px solid #27272a", paddingTop: "16px" }}>
+                <button type="button" onClick={() => setIsEditModalOpen(false)} style={{ backgroundColor: "transparent", border: "1px solid #27272a", color: "#a1a1aa", padding: "10px 16px", borderRadius: "8px", cursor: "pointer", fontWeight: 600, fontSize: "13px" }}>
                   Cancelar
                 </button>
-                <button type="submit" disabled={updating} style={{ backgroundColor: "#2563eb", border: "none", color: "#fff", padding: "10px 20px", borderRadius: "8px", cursor: "pointer", fontWeight: 600, display: "flex", alignItems: "center", gap: "8px" }}>
+                <button type="submit" disabled={updating} style={{ backgroundColor: "#2563eb", border: "none", color: "#ffffff", padding: "10px 20px", borderRadius: "8px", cursor: "pointer", fontWeight: 600, display: "flex", alignItems: "center", gap: "8px", fontSize: "13px" }}>
                   <Save size={16} />
                   {updating ? "Guardando..." : "Guardar Cambios"}
                 </button>
@@ -419,6 +427,17 @@ export default function ResourceManagement() {
           </div>
         </div>
       )}
+
+      <ConfirmModal
+        open={confirmDelete !== null}
+        title="Eliminar recurso"
+        message={`¿Estás seguro de que deseas eliminar el recurso "${confirmDelete?.name}"? Esta acción no se puede deshacer.`}
+        confirmLabel="Eliminar"
+        cancelLabel="Cancelar"
+        confirmColor="#ef4444"
+        onConfirm={executeDelete}
+        onCancel={() => setConfirmDelete(null)}
+      />
     </div>
   );
 }

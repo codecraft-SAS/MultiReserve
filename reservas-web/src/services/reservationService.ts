@@ -38,6 +38,9 @@ export const createReservation = async (reservationData: {
   startTime: string;          // Formato ISO string para LocalDateTime (Ej: "2026-06-08T14:00:00")
   endTime: string;            // Formato ISO string para LocalDateTime
   purpose?: string;           // Opcional
+  businessId?: number;
+  amountPaid?: number;
+  paymentMethod?: string;
 }): Promise<Reservation> => {
   const response = await api.post<Reservation>("/reservations", reservationData);
   return response.data;

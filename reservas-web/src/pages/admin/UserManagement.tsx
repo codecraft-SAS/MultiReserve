@@ -1,17 +1,13 @@
 import { useState, useEffect } from "react";
 import { 
   Users, Plus, Search, ShieldCheck, UserCog, User, 
-  Mail, Shield, X, Edit2, Trash2 
+  Mail, Shield, X, Edit2, Trash2, Building2, Lock
 } from "lucide-react";
 import toast from "react-hot-toast";
-
-// 🌟 Importamos todas las funciones necesarias conectadas al backend
-import { 
-  getAllUsers, 
-  createUserFromAdmin, 
-  updateUserFromAdmin, 
-  deleteUserFromAdmin 
-} from "../../services/userService"; 
+import { getAllUsers, createUserFromAdmin, updateUserFromAdmin, deleteUserFromAdmin } from "../../services/userService";
+import { getBusinesses } from "../../services/businessService";
+import type { Business } from "../../types/Business";
+import { ConfirmModal } from "../../components/ConfirmModal";
 
 interface UserSystem {
   id?: number;
@@ -19,25 +15,26 @@ interface UserSystem {
   email: string;
   role: "ADMIN" | "EMPLOYEE" | "CLIENT";
   password?: string;
+  businessId?: number | null;
 }
 
 export default function UserManagement() {
-  // Estados operativos
   const [users, setUsers] = useState<UserSystem[]>([]);
+  const [businesses, setBusinesses] = useState<Business[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false); 
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
   const [focusedRow, setFocusedRow] = useState<number | null>(null);
   const [hoveredAction, setHoveredAction] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<{ id: number; name: string } | null>(null);
 
-  // Estados del Formulario
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState<"ADMIN" | "EMPLOYEE" | "CLIENT">("EMPLOYEE");
+  const [businessId, setBusinessId] = useState<number | null>(null);
 
-  // 🌟 Lectura inicial directa de la base de datos
   const fetchUsers = async () => {
     try {
       const data = await getAllUsers();
@@ -48,11 +45,26 @@ export default function UserManagement() {
     }
   };
 
+  const fetchBusinesses = async () => {
+    try {
+      const data = await getBusinesses();
+      setBusinesses(data);
+    } catch (error) {
+      console.error("Error al cargar negocios:", error);
+    }
+  };
+
   useEffect(() => {
     fetchUsers();
+    fetchBusinesses();
   }, []);
 
-  // Filtrado predictivo en barra de búsqueda
+  const getBusinessName = (id?: number | null) => {
+    if (!id) return "—";
+    const b = businesses.find(b => b.id === id);
+    return b ? b.name : "—";
+  };
+
   const filteredUsers = users.filter(u =>
     u.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     u.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -66,6 +78,7 @@ export default function UserManagement() {
     setEmail("");
     setPassword("");
     setRole("EMPLOYEE");
+    setBusinessId(null);
     setIsModalOpen(true);
   };
 
@@ -76,24 +89,28 @@ export default function UserManagement() {
     setEmail(user.email);
     setPassword(""); 
     setRole(user.role);
+    setBusinessId(user.businessId ?? null);
     setIsModalOpen(true);
   };
 
-  // 🌟 ELIMINAR CONECTADO DIRECTO AL BACKEND
   const handleDeleteUser = async (id: number, name: string) => {
-    if (window.confirm(`¿Estás completamente seguro de que deseas eliminar a ${name}?`)) {
-      try {
-        await deleteUserFromAdmin(id); // Ejecuta el DELETE en Spring Boot
-        setUsers(users.filter(user => user.id !== id)); // Limpia el estado de la UI
-        toast.success("Usuario eliminado de la base de datos.");
-      } catch (error) {
-        console.error(error);
-        toast.error("Error al intentar eliminar el usuario en el servidor.");
-      }
+    setConfirmDelete({ id, name });
+  };
+
+  const executeDelete = async () => {
+    if (!confirmDelete) return;
+    try {
+      await deleteUserFromAdmin(confirmDelete.id);
+      setUsers(users.filter(user => user.id !== confirmDelete.id));
+      toast.success("Usuario eliminado de la base de datos.");
+    } catch (error) {
+      console.error(error);
+      toast.error("Error al intentar eliminar el usuario en el servidor.");
+    } finally {
+      setConfirmDelete(null);
     }
   };
 
-  // 🌟 GUARDAR / MODIFICAR CONECTADO DIRECTO AL BACKEND
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -106,17 +123,16 @@ export default function UserManagement() {
       fullName,
       email,
       role,
-      ...(password && { password }) 
+      ...(password && { password }),
+      ...(role === "EMPLOYEE" ? { businessId: businessId ?? null } : {})
     };
 
     try {
       if (isEditing && selectedUserId) {
-        // Petición PUT activa hacia /api/admin/users/{id}
         const updatedUser = await updateUserFromAdmin(selectedUserId, payload);
         setUsers(users.map(u => u.id === selectedUserId ? updatedUser : u));
         toast.success("Usuario actualizado correctamente.");
       } else {
-        // Petición POST activa hacia /api/admin/users
         const createdUser = await createUserFromAdmin(payload);
         setUsers([createdUser, ...users]);
         toast.success(`Usuario con rol de ${role} guardado con éxito.`);
@@ -194,8 +210,9 @@ export default function UserManagement() {
               <tr style={{ backgroundColor: "#141414", borderBottom: "1px solid rgba(255, 255, 255, 0.05)" }}>
                 <th style={{ padding: "16px 20px", color: "#a1a1aa", fontWeight: 600 }}>ID</th>
                 <th style={{ padding: "16px 20px", color: "#a1a1aa", fontWeight: 600 }}>Nombre Completo</th>
-                <th style={{ padding: "16px 20px", color: "#a1a1aa", fontWeight: 600 }}>Identificador Digital (Email)</th>
-                <th style={{ padding: "16px 20px", color: "#a1a1aa", fontWeight: 600, textAlign: "center" }}>Rol de Acceso</th>
+                <th style={{ padding: "16px 20px", color: "#a1a1aa", fontWeight: 600 }}>Email</th>
+                <th style={{ padding: "16px 20px", color: "#a1a1aa", fontWeight: 600, textAlign: "center" }}>Rol</th>
+                <th style={{ padding: "16px 20px", color: "#a1a1aa", fontWeight: 600 }}>Negocio</th>
                 <th style={{ padding: "16px 20px", color: "#a1a1aa", fontWeight: 600, textAlign: "center" }}>Acciones</th>
               </tr>
             </thead>
@@ -226,6 +243,9 @@ export default function UserManagement() {
                           {roleConfig.icon}
                           {roleConfig.text}
                         </span>
+                      </td>
+                      <td style={{ padding: "16px 20px", color: "#a1a1aa", fontSize: "13px" }}>
+                        {getBusinessName((user as any).businessId)}
                       </td>
                       <td style={{ padding: "16px 20px", textAlign: "center" }}>
                         <div style={{ display: "flex", gap: "10px", justifyContent: "center", alignItems: "center" }}>
@@ -264,7 +284,7 @@ export default function UserManagement() {
                 })
               ) : (
                 <tr>
-                  <td colSpan={5} style={{ padding: "32px", textAlign: "center", color: "#71717a" }}>
+                  <td colSpan={6} style={{ padding: "32px", textAlign: "center", color: "#71717a" }}>
                     No se encontraron usuarios que coincidan con los criterios de búsqueda.
                   </td>
                 </tr>
@@ -275,6 +295,17 @@ export default function UserManagement() {
       </div>
 
       {/* MODAL FLOTANTE */}
+      <ConfirmModal
+        open={confirmDelete !== null}
+        title="Eliminar usuario"
+        message={`¿Estás completamente seguro de que deseas eliminar a "${confirmDelete?.name}"? Esta acción no se puede deshacer.`}
+        confirmLabel="Eliminar"
+        cancelLabel="Cancelar"
+        confirmColor="#ef4444"
+        onConfirm={executeDelete}
+        onCancel={() => setConfirmDelete(null)}
+      />
+
       {isModalOpen && (
         <div style={{
           position: "fixed", top: 0, left: 0, width: "100vw", height: "100vh",
@@ -283,7 +314,7 @@ export default function UserManagement() {
         }}>
           <div style={{
             backgroundColor: "#0c0c0e", border: "1px solid rgba(255, 255, 255, 0.08)",
-            borderRadius: "16px", padding: "28px", width: "420px", display: "flex", flexDirection: "column", gap: "20px"
+            borderRadius: "16px", padding: "28px", width: "100%", maxWidth: "420px", display: "flex", flexDirection: "column", gap: "20px"
           }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
@@ -301,7 +332,7 @@ export default function UserManagement() {
                 <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
                   <User size={14} style={{ position: "absolute", left: "12px", color: "#71717a" }} />
                   <input type="text" id="fullName" name="fullName" value={fullName} onChange={(e) => setFullName(e.target.value)} required
-                    style={{ width: "100%", backgroundColor: "#141414", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "8px", padding: "10px 12px 10px 34px", color: "#fff", fontSize: "14px" }}
+                    style={{ width: "100%", backgroundColor: "#111111", border: "1px solid rgba(255, 255, 255, 0.08)", borderRadius: "8px", padding: "12px 12px 12px 34px", color: "#ffffff", fontSize: "14px", boxSizing: "border-box" }}
                   />
                 </div>
               </div>
@@ -311,7 +342,7 @@ export default function UserManagement() {
                 <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
                   <Mail size={14} style={{ position: "absolute", left: "12px", color: "#71717a" }} />
                   <input type="email" id="email" name="email" value={email} onChange={(e) => setEmail(e.target.value)} required
-                    style={{ width: "100%", backgroundColor: "#141414", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "8px", padding: "10px 12px 10px 34px", color: "#fff", fontSize: "14px" }}
+                    style={{ width: "100%", backgroundColor: "#111111", border: "1px solid rgba(255, 255, 255, 0.08)", borderRadius: "8px", padding: "12px 12px 12px 34px", color: "#ffffff", fontSize: "14px", boxSizing: "border-box" }}
                   />
                 </div>
               </div>
@@ -320,21 +351,41 @@ export default function UserManagement() {
                 <label style={{ fontSize: "12px", color: "#a1a1aa", fontWeight: 500 }} htmlFor="password">
                   {isEditing ? "Nueva Contraseña (Opcional)" : "Contraseña Provisional"}
                 </label>
-                <input type="password" id="password" name="password" value={password} onChange={(e) => setPassword(e.target.value)} required={!isEditing}
-                  style={{ width: "100%", backgroundColor: "#141414", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "8px", padding: "10px 12px", color: "#fff", fontSize: "14px" }}
-                />
+                <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
+                  <Lock size={14} style={{ position: "absolute", left: "12px", color: "#71717a" }} />
+                  <input type="password" id="password" name="password" value={password} onChange={(e) => setPassword(e.target.value)} required={!isEditing}
+                    style={{ width: "100%", backgroundColor: "#111111", border: "1px solid rgba(255, 255, 255, 0.08)", borderRadius: "8px", padding: "12px 12px 12px 34px", color: "#ffffff", fontSize: "14px", boxSizing: "border-box" }}
+                  />
+                </div>
               </div>
 
               <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                 <label style={{ fontSize: "12px", color: "#a1a1aa", fontWeight: 500 }} htmlFor="role">Rol Asignado</label>
-                <select id="role" name="role" value={role} onChange={(e) => setRole(e.target.value as any)}
-                  style={{ width: "100%", backgroundColor: "#141414", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "8px", padding: "10px 12px", color: "#fff", fontSize: "14px", cursor: "pointer" }}
+                  <select id="role" name="role" value={role} onChange={(e) => { setRole(e.target.value as any); if (e.target.value !== "EMPLOYEE") setBusinessId(null); }}
+                    style={{ width: "100%", backgroundColor: "#111111", border: "1px solid rgba(255, 255, 255, 0.08)", borderRadius: "8px", padding: "12px 12px 12px 12px", color: "#ffffff", fontSize: "14px", cursor: "pointer", colorScheme: "dark", boxSizing: "border-box" }}
                 >
                   <option value="EMPLOYEE">Empleado / Socio Comercial</option>
                   <option value="ADMIN">Administrador General</option>
                   <option value="CLIENT">Cliente (Registro Manual)</option>
                 </select>
               </div>
+
+              {role === "EMPLOYEE" && (
+                <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                  <label style={{ fontSize: "12px", color: "#a1a1aa", fontWeight: 500 }} htmlFor="businessId">Asignar a Negocio</label>
+                  <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
+                    <Building2 size={14} style={{ position: "absolute", left: "12px", color: "#71717a" }} />
+                    <select id="businessId" name="businessId" value={businessId ?? ""} onChange={(e) => setBusinessId(e.target.value ? Number(e.target.value) : null)}
+                      style={{ width: "100%", backgroundColor: "#111111", border: "1px solid rgba(255, 255, 255, 0.08)", borderRadius: "8px", padding: "12px 12px 12px 34px", color: "#ffffff", fontSize: "14px", cursor: "pointer", colorScheme: "dark", boxSizing: "border-box" }}
+                    >
+                      <option value="">Sin asignar</option>
+                      {businesses.map(b => (
+                        <option key={b.id} value={b.id}>{b.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              )}
 
               <button type="submit"
                 style={{

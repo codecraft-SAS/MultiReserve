@@ -1,5 +1,7 @@
 package com.epw.multireserve.service.impl;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 
 import org.springframework.security.core.Authentication;
@@ -13,10 +15,12 @@ import com.epw.multireserve.dto.UpdateReservationRequest;
 import com.epw.multireserve.entity.Business;
 import com.epw.multireserve.entity.Reservation;
 import com.epw.multireserve.entity.ReservationStatus;
+import com.epw.multireserve.entity.Resource;
 import com.epw.multireserve.entity.User;
 import com.epw.multireserve.exception.ResourceNotFoundException;
 import com.epw.multireserve.repository.BusinessRepository;
 import com.epw.multireserve.repository.ReservationRepository;
+import com.epw.multireserve.repository.ResourceRepository;
 import com.epw.multireserve.repository.UserRepository;
 import com.epw.multireserve.service.ReservationService;
 
@@ -27,15 +31,18 @@ public class ReservationServiceImpl implements ReservationService {
     private final ReservationRepository repository;
     private final BusinessRepository businessRepository;
     private final UserRepository userRepository;
+    private final ResourceRepository resourceRepository;
 
     public ReservationServiceImpl(
             ReservationRepository repository,
             BusinessRepository businessRepository,
-            UserRepository userRepository) {
+            UserRepository userRepository,
+            ResourceRepository resourceRepository) {
 
         this.repository = repository;
         this.businessRepository = businessRepository;
         this.userRepository = userRepository;
+        this.resourceRepository = resourceRepository;
     }
 
     // ==========================================
@@ -46,8 +53,14 @@ public class ReservationServiceImpl implements ReservationService {
 
         if (request.getStartTime().isAfter(request.getEndTime())
                 || request.getStartTime().equals(request.getEndTime())) {
-            throw new IllegalArgumentException("Start time must be before end time");
+            throw new IllegalArgumentException("La hora de inicio debe ser anterior a la hora de fin");
         }
+
+        if (request.getReservationDate().isBefore(LocalDate.now())) {
+            throw new IllegalArgumentException("La fecha de reserva no puede ser anterior a la fecha actual");
+        }
+
+        validateOperatingHours(request.getResourceName(), request.getStartTime(), request.getEndTime());
 
         boolean existsOverlap = repository.existsOverlappingReservation(
                 request.getResourceName(),
@@ -70,21 +83,35 @@ public class ReservationServiceImpl implements ReservationService {
 
         r.setStatus(ReservationStatus.PENDING);
         r.setAmount(request.getAmount());
+        r.setAmountPaid(request.getAmountPaid() != null ? request.getAmountPaid() : 0.0);
+        r.setPaymentMethod(request.getPaymentMethod());
+
+        // Link resource and derive business from it
+        if (request.getResourceId() != null) {
+            Resource resource = resourceRepository.findById(request.getResourceId())
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "Recurso " + request.getResourceId() + " no encontrado"));
+            r.setResource(resource);
+            if (resource.getBusiness() != null) {
+                r.setBusiness(resource.getBusiness());
+            }
+        }
+
+        // businessId in request overrides the resource-derived business
+        if (request.getBusinessId() != null) {
+            Business business = businessRepository.findById(request.getBusinessId())
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "Negocio " + request.getBusinessId() + " no encontrado"));
+            r.setBusiness(business);
+        }
 
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String email = auth.getName();
 
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
 
         r.setUser(user);
-
-        if (request.getBusinessId() != null) {
-            Business business = businessRepository.findById(request.getBusinessId())
-                    .orElseThrow(() -> new ResourceNotFoundException(
-                            "Business " + request.getBusinessId() + " not found"));
-            r.setBusiness(business);
-        }
 
         Reservation saved = repository.save(r);
 
@@ -108,6 +135,16 @@ public class ReservationServiceImpl implements ReservationService {
                     .stream()
                     .map(this::toResponse)
                     .toList();
+        }
+
+        if (user.getRole().name().equals("EMPLOYEE")) {
+            if (user.getBusiness() != null) {
+                return repository.findByBusinessId(user.getBusiness().getId())
+                        .stream()
+                        .map(this::toResponse)
+                        .toList();
+            }
+            return List.of();
         }
 
         return repository.findByUserId(user.getId())
@@ -145,12 +182,18 @@ public class ReservationServiceImpl implements ReservationService {
     @Override
     public ReservationResponse update(Long id, UpdateReservationRequest request) {
         Reservation r = repository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Reservation " + id + " not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Reserva " + id + " no encontrada"));
 
         if (request.getStartTime().isAfter(request.getEndTime())
                 || request.getStartTime().equals(request.getEndTime())) {
-            throw new IllegalArgumentException("Start time must be before end time");
+            throw new IllegalArgumentException("La hora de inicio debe ser anterior a la hora de fin");
         }
+
+        if (request.getReservationDate().isBefore(LocalDate.now())) {
+            throw new IllegalArgumentException("La fecha de reserva no puede ser anterior a la fecha actual");
+        }
+
+        validateOperatingHours(request.getResourceName(), request.getStartTime(), request.getEndTime());
 
         r.setCustomerName(request.getCustomerName());
         r.setResourceType(request.getResourceType());
@@ -174,7 +217,7 @@ public class ReservationServiceImpl implements ReservationService {
     @Override
     public void delete(Long id) {
         if (!repository.existsById(id)) {
-            throw new ResourceNotFoundException("Reservation " + id + " not found");
+            throw new ResourceNotFoundException("Reserva " + id + " no encontrada");
         }
         repository.deleteById(id);
     }
@@ -185,7 +228,7 @@ public class ReservationServiceImpl implements ReservationService {
     @Override
     public ReservationResponse confirm(Long id) {
         Reservation reservation = repository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Reservation " + id + " not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Reserva " + id + " no encontrada"));
 
         reservation.setStatus(ReservationStatus.CONFIRMED);
 
@@ -198,13 +241,13 @@ public class ReservationServiceImpl implements ReservationService {
     @Override
     public ReservationResponse changeStatus(Long id, String status) {
         Reservation reservation = repository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Reservation " + id + " not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Reserva " + id + " no encontrada"));
 
         ReservationStatus newStatus;
         try {
             newStatus = ReservationStatus.valueOf(status);
         } catch (Exception e) {
-            throw new IllegalArgumentException("Invalid status: " + status);
+            throw new IllegalArgumentException("Estado inválido: " + status);
         }
 
         reservation.setStatus(newStatus);
@@ -250,5 +293,20 @@ public class ReservationServiceImpl implements ReservationService {
         res.setUpdatedAt(r.getUpdatedAt());
 
         return res;
+    }
+
+    private void validateOperatingHours(String resourceName, LocalTime startTime, LocalTime endTime) {
+        resourceRepository.findByNameIgnoreCase(resourceName).ifPresent(resource -> {
+            if (resource.getOpeningHour() != null && resource.getClosingHour() != null) {
+                LocalTime opening = LocalTime.parse(resource.getOpeningHour());
+                LocalTime closing = LocalTime.parse(resource.getClosingHour());
+                if (startTime.isBefore(opening) || endTime.isAfter(closing)) {
+                    throw new IllegalArgumentException(
+                            "El horario del recurso es de " + resource.getOpeningHour()
+                            + " a " + resource.getClosingHour()
+                            + ". La reserva debe estar dentro de ese rango");
+                }
+            }
+        });
     }
 }

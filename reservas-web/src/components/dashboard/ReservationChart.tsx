@@ -2,9 +2,9 @@ import { useState, useEffect } from "react";
 import api from "../../api/axios";
 
 interface MonthlyData {
-  month: string;  
-  count: number;  
-  heightPercentage: string; 
+  month: string;
+  count: number;
+  heightPercent: number;
 }
 
 export function ReservationChart() {
@@ -15,27 +15,15 @@ export function ReservationChart() {
     const fetchMonthlyData = async () => {
       try {
         setLoading(true);
-        // Tipamos la respuesta de forma flexible para admitir tanto 'name' como 'month'
-        const response = await api.get<{ name?: string; month?: string; count: number }[]>('/reports/monthly');
-        
+        const response = await api.get<{ month: string; reservations: number }[]>('/reports/monthly');
+
         if (response.data && response.data.length > 0) {
-          const maxReservations = Math.max(...response.data.map(m => m.count), 1);
-
-          const parsedData = response.data.map(item => {
-            const percentage = (item.count / maxReservations) * 100;
-            
-            // 🚨 SOLUCIÓN: Buscamos el nombre del mes de forma segura sin importar cómo venga del DTO
-            // Si item.name no existe, intentamos usar item.month, y si ninguno existe usamos "Mes"
-            const rawMonthName = item.name || item.month || "Mes";
-            
-            return {
-              // Cortamos de manera segura sabiendo que rawMonthName siempre será un string válido
-              month: rawMonthName.substring(0, 3), 
-              count: item.count,
-              heightPercentage: `${Math.max(percentage, 8)}%` 
-            };
-          });
-
+          const maxReservations = Math.max(...response.data.map(m => m.reservations), 1);
+          const parsedData = response.data.map(item => ({
+            month: item.month ? item.month.substring(0, 3) : "---",
+            count: item.reservations,
+            heightPercent: Math.max((item.reservations / maxReservations) * 100, 8),
+          }));
           setMonthlyStats(parsedData);
         }
       } catch (error) {
@@ -44,13 +32,12 @@ export function ReservationChart() {
         setLoading(false);
       }
     };
-
     fetchMonthlyData();
   }, []);
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-44 text-xs text-slate-500 animate-pulse">
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "176px", fontSize: "12px", color: "#71717a" }}>
         <span>Analizando métricas temporales...</span>
       </div>
     );
@@ -58,32 +45,42 @@ export function ReservationChart() {
 
   if (monthlyStats.length === 0) {
     return (
-      <div className="flex items-center justify-center h-44 text-xs text-slate-500">
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "176px", fontSize: "12px", color: "#71717a" }}>
         <span>Sin registros de actividad mensual.</span>
       </div>
     );
   }
 
   return (
-    <div className="flex items-end justify-between h-44 pt-6 px-2 bg-slate-950/40 rounded-xl border border-slate-800/50">
+    <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", height: "176px", padding: "24px 8px 0", backgroundColor: "rgba(9, 9, 11, 0.4)", borderRadius: "12px", border: "1px solid rgba(39, 39, 42, 0.5)", boxSizing: "border-box" }}>
       {monthlyStats.map((item, index) => (
-        <div key={index} className="flex flex-col items-center flex-1 group h-full justify-end">
-          
-          {/* Contenedor de la barra vertical interactiva */}
-          <div 
-            className="w-6 sm:w-8 relative rounded-t-md bg-gradient-to-t from-blue-600/80 to-blue-500 group-hover:from-blue-500 group-hover:to-cyan-400 transition-all duration-500 flex items-end justify-center shadow-lg shadow-blue-500/10"
-            style={{ height: item.heightPercentage }}
+        <div key={index} style={{ display: "flex", flexDirection: "column", alignItems: "center", flex: 1, height: "100%", justifyContent: "flex-end", position: "relative" }}>
+          <div
+            style={{
+              width: "28px",
+              borderRadius: "6px 6px 0 0",
+              background: "linear-gradient(to top, rgba(37, 99, 235, 0.8), rgba(59, 130, 246, 0.6))",
+              height: `${item.heightPercent}%`,
+              minHeight: "8px",
+              position: "relative",
+              cursor: "pointer",
+              transition: "opacity 0.2s",
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.opacity = "0.8"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.opacity = "1"; }}
           >
-            {/* Tooltip interactivo */}
-            <div className="absolute -top-7 scale-0 group-hover:scale-100 bg-slate-950 text-[10px] text-white font-bold px-1.5 py-0.5 rounded border border-slate-800 transition-all shadow-xl z-10 whitespace-nowrap">
+            <div style={{ position: "absolute", top: "-28px", left: "50%", transform: "translateX(-50%)", backgroundColor: "#09090b", color: "#ffffff", fontSize: "10px", fontWeight: 700, padding: "2px 6px", borderRadius: "4px", border: "1px solid #27272a", whiteSpace: "nowrap", opacity: 0, transition: "opacity 0.2s", pointerEvents: "none" }}
+              className="chart-tooltip">
               {item.count} {item.count === 1 ? 'reserva' : 'reservas'}
             </div>
           </div>
-          
-          {/* Nombre resumido del Mes */}
-          <span className="text-[11px] text-slate-500 font-medium mt-3 mb-1 group-hover:text-slate-300 transition-colors">
+          <span style={{ fontSize: "11px", color: "#71717a", fontWeight: 500, marginTop: "12px", marginBottom: "4px" }}>
             {item.month}
           </span>
+          <style>{`
+            .chart-tooltip { opacity: 0; }
+            div:hover > .chart-tooltip { opacity: 1; }
+          `}</style>
         </div>
       ))}
     </div>

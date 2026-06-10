@@ -18,3 +18,4 @@ reservas-web/.env
 *.ntvs*
 *.njsproj
 *.sln
+dist

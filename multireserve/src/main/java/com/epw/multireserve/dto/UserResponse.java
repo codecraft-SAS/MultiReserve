@@ -12,6 +12,8 @@ public class UserResponse {
 
     private Role role;
 
+    private Long businessId;
+
     public Long getId() {
         return id;
     }
@@ -28,6 +30,10 @@ public class UserResponse {
         return role;
     }
 
+    public Long getBusinessId() {
+        return businessId;
+    }
+
     public void setId(Long id) {
         this.id = id;
     }
@@ -42,5 +48,9 @@ public class UserResponse {
 
     public void setRole(Role role) {
         this.role = role;
+    }
+
+    public void setBusinessId(Long businessId) {
+        this.businessId = businessId;
     }
 }

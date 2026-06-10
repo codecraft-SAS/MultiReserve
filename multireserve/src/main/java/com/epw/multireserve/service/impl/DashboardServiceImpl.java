@@ -128,7 +128,7 @@ public class DashboardServiceImpl implements DashboardService {
 
     private long countReservationsInPeriod(LocalDate start, LocalDate end) {
         try {
-            return reservationRepository.count();
+            return reservationRepository.countByReservationDateBetween(start, end);
         } catch (Exception e) {
             return 0L;
         }

@@ -15,7 +15,6 @@ build/
 
 # Archivos de configuración sensibles
 *.env
-application.properties
 application.yml
 
 # Archivos de IDE

@@ -100,7 +100,7 @@ export default function CreateBusinessForm() {
             placeholder="Ej. Central Park Arena" 
             value={formData.name} 
             onChange={(e) => setFormData({ ...formData, name: e.target.value })} 
-            style={{ width: "100%", backgroundColor: "#111111", border: "1px solid rgba(255, 255, 255, 0.08)", borderRadius: "8px", padding: "12px", color: "#ffffff", outline: "none" }} 
+            style={{ width: "100%", backgroundColor: "#111111", border: "1px solid rgba(255, 255, 255, 0.08)", borderRadius: "8px", padding: "12px", color: "#ffffff", outline: "none", boxSizing: "border-box" }} 
           />
         </div>
 
@@ -110,7 +110,7 @@ export default function CreateBusinessForm() {
           <select 
             value={formData.category} 
             onChange={(e) => setFormData({ ...formData, category: e.target.value as Category })} 
-            style={{ width: "100%", backgroundColor: "#111111", border: "1px solid rgba(255, 255, 255, 0.08)", borderRadius: "8px", padding: "12px", color: "#ffffff", outline: "none", cursor: "pointer" }}
+            style={{ width: "100%", backgroundColor: "#111111", border: "1px solid rgba(255, 255, 255, 0.08)", borderRadius: "8px", padding: "12px", color: "#ffffff", outline: "none", cursor: "pointer", boxSizing: "border-box" }}
           >
             <option value="RESTAURANT">🍽️ Restaurante</option>
             <option value="SPORT">⚽ Centro Deportivo</option>
@@ -128,7 +128,7 @@ export default function CreateBusinessForm() {
             placeholder="Describe detalladamente los servicios o enfoque del negocio..." 
             value={formData.description} 
             onChange={(e) => setFormData({ ...formData, description: e.target.value })} 
-            style={{ width: "100%", backgroundColor: "#111111", border: "1px solid rgba(255, 255, 255, 0.08)", borderRadius: "8px", padding: "12px", color: "#ffffff", outline: "none", resize: "none" }} 
+            style={{ width: "100%", backgroundColor: "#111111", border: "1px solid rgba(255, 255, 255, 0.08)", borderRadius: "8px", padding: "12px", color: "#ffffff", outline: "none", resize: "none", boxSizing: "border-box" }} 
           />
         </div>
 
@@ -146,7 +146,7 @@ export default function CreateBusinessForm() {
               placeholder="Ej. Pasto" 
               value={formData.city} 
               onChange={(e) => setFormData({ ...formData, city: e.target.value })} 
-              style={{ width: "100%", backgroundColor: "#111111", border: "1px solid rgba(255, 255, 255, 0.08)", borderRadius: "8px", padding: "12px", color: "#ffffff", outline: "none" }} 
+              style={{ width: "100%", backgroundColor: "#111111", border: "1px solid rgba(255, 255, 255, 0.08)", borderRadius: "8px", padding: "12px", color: "#ffffff", outline: "none", boxSizing: "border-box" }} 
             />
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
@@ -157,7 +157,7 @@ export default function CreateBusinessForm() {
               placeholder="Ej. Calle 18 #24-02" 
               value={formData.address} 
               onChange={(e) => setFormData({ ...formData, address: e.target.value })} 
-              style={{ width: "100%", backgroundColor: "#111111", border: "1px solid rgba(255, 255, 255, 0.08)", borderRadius: "8px", padding: "12px", color: "#ffffff", outline: "none" }} 
+              style={{ width: "100%", backgroundColor: "#111111", border: "1px solid rgba(255, 255, 255, 0.08)", borderRadius: "8px", padding: "12px", color: "#ffffff", outline: "none", boxSizing: "border-box" }} 
             />
           </div>
         </div>
@@ -175,7 +175,7 @@ export default function CreateBusinessForm() {
               placeholder="Ej. 3157000000" 
               value={formData.phone} 
               onChange={(e) => setFormData({ ...formData, phone: e.target.value })} 
-              style={{ width: "100%", backgroundColor: "#111111", border: "1px solid rgba(255, 255, 255, 0.08)", borderRadius: "8px", padding: "12px", color: "#ffffff", outline: "none" }} 
+              style={{ width: "100%", backgroundColor: "#111111", border: "1px solid rgba(255, 255, 255, 0.08)", borderRadius: "8px", padding: "12px", color: "#ffffff", outline: "none", boxSizing: "border-box" }} 
             />
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
@@ -185,7 +185,7 @@ export default function CreateBusinessForm() {
               placeholder="contacto@negocio.com" 
               value={formData.email} 
               onChange={(e) => setFormData({ ...formData, email: e.target.value })} 
-              style={{ width: "100%", backgroundColor: "#111111", border: "1px solid rgba(255, 255, 255, 0.08)", borderRadius: "8px", padding: "12px", color: "#ffffff", outline: "none" }} 
+              style={{ width: "100%", backgroundColor: "#111111", border: "1px solid rgba(255, 255, 255, 0.08)", borderRadius: "8px", padding: "12px", color: "#ffffff", outline: "none", boxSizing: "border-box" }} 
             />
           </div>
         </div>
@@ -204,7 +204,7 @@ export default function CreateBusinessForm() {
               placeholder="https://images.unsplash.com/..." 
               value={formData.imageUrl} 
               onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })} 
-              style={{ width: "100%", backgroundColor: "#111111", border: "1px solid rgba(255, 255, 255, 0.08)", borderRadius: "8px", padding: "12px 12px 12px 40px", color: "#ffffff", outline: "none" }} 
+              style={{ width: "100%", backgroundColor: "#111111", border: "1px solid rgba(255, 255, 255, 0.08)", borderRadius: "8px", padding: "12px 12px 12px 40px", color: "#ffffff", outline: "none", boxSizing: "border-box" }} 
             />
           </div>
         </div>

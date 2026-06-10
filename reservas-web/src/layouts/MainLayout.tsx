@@ -19,31 +19,14 @@ export default function MainLayout() {
         height: "100vh",
         width: "100vw",
         display: "flex",
-        backgroundColor: "#09090b", // zinc-950 puro
-        color: "#f4f4f5",           // zinc-100
+        backgroundColor: "#09090b",
+        color: "#e4e4e7",
         overflow: "hidden",
         userSelect: "none",
-        fontFamily: "sans-serif",
+        fontFamily: "system-ui, -apple-system, sans-serif",
         boxSizing: "border-box"
       }}
     >
-      {/* Inyección de estilos de scroll directos en el DOM para la consistencia visual */}
-      <style>{`
-        .view-scrollbar::-webkit-scrollbar {
-          width: 8px;
-          height: 8px;
-        }
-        .view-scrollbar::-webkit-scrollbar-track {
-          background: #09090b;
-        }
-        .view-scrollbar::-webkit-scrollbar-thumb {
-          background: #27272a;
-          border-radius: 9999px;
-        }
-        .view-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: #3f3f46;
-        }
-      `}</style>
       
       {/* Sidebar - Mantiene su estado y se acopla al flujo */}
       <Sidebar isOpen={sidebarOpen} />

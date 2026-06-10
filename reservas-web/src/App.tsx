@@ -30,7 +30,7 @@ import EmployeePanel from "./pages/EmployeePanel";
 // Páginas de CLIENTE e Interfaz General de Cuenta
 import BusinessCatalog from "./pages/BusinessCatalog";
 import ClientReservations from "./pages/ClientReservations";
-import ProfilePage from "./pages/ProfilePage"; // ◄ Perfil importado correctamente
+import { ProfilePage } from "./pages/ProfilePage";
 
 function App() {
   return (
@@ -70,8 +70,9 @@ function App() {
         <Route element={<PrivateRoute allowedRoles={['EMPLOYEE']} />}>
           <Route path="/employee" element={<MainLayout />}>
             <Route path="dashboard" element={<EmployeePanel />} />
-            
-            {/* Ruta añadida para el perfil del Empleado */}
+            <Route path="resources" element={<ResourceManagement />} />
+            <Route path="create-resource" element={<CreateResourceForm />} />
+            <Route path="reservations" element={<ReservationManagement />} />
             <Route path="profile" element={<ProfilePage />} /> 
           </Route>
         </Route>
