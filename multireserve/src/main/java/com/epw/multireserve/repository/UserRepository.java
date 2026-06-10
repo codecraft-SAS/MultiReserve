@@ -10,6 +10,7 @@ import com.epw.multireserve.entity.User;
 public interface UserRepository extends JpaRepository<User, Long> {
 
     // Buscar usuario por email (para login y asignación de owner)
+    // Devuelve Optional para manejar caso de email no encontrado
     Optional<User> findByEmail(String email);
 
     // Validar existencia de email (para registro)
