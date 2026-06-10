@@ -38,11 +38,11 @@ public class ReservationTagServiceImpl
         Reservation reservation = reservationRepository
                 .findById(reservationId)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Reservation " + reservationId + " not found"));
+                        "Reserva " + reservationId + " no encontrada"));
 
         Tag tag = tagRepository.findById(tagId)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Tag " + tagId + " not found"));
+                        "Etiqueta " + tagId + " no encontrada"));
 
         reservation.getTags().add(tag);
 
@@ -59,11 +59,11 @@ public class ReservationTagServiceImpl
         Reservation reservation = reservationRepository
                 .findById(reservationId)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Reservation " + reservationId + " not found"));
+                        "Reserva " + reservationId + " no encontrada"));
 
         Tag tag = tagRepository.findById(tagId)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Tag " + tagId + " not found"));
+                        "Etiqueta " + tagId + " no encontrada"));
 
         reservation.getTags().remove(tag);
 

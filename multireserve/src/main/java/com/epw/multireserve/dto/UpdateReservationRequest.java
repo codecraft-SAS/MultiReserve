@@ -12,23 +12,23 @@ import jakarta.validation.constraints.Size;
 
 public class UpdateReservationRequest {
 
-    @NotBlank(message = "Customer name is required")
+    @NotBlank(message = "El nombre del cliente es obligatorio")
     @Size(max = 120)
     private String customerName;
 
-    @NotNull(message = "Resource type is required")
+    @NotNull(message = "El tipo de recurso es obligatorio")
     private ResourceType resourceType;
 
-    @NotBlank(message = "Resource name is required")
+    @NotBlank(message = "El nombre del recurso es obligatorio")
     private String resourceName;
 
-    @NotNull(message = "Reservation date is required")
+    @NotNull(message = "La fecha de reserva es obligatoria")
     private LocalDate reservationDate;
 
-    @NotNull(message = "Start time is required")
+    @NotNull(message = "La hora de inicio es obligatoria")
     private LocalTime startTime;
 
-    @NotNull(message = "End time is required")
+    @NotNull(message = "La hora de fin es obligatoria")
     private LocalTime endTime;
 
     private ReservationStatus status;

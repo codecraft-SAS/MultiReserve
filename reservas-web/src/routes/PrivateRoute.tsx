@@ -50,7 +50,6 @@ export default function PrivateRoute({
   // Si hay roles permitidos y el rol del usuario no está incluido → redirigir
   if (allowedRoles && !allowedRoles.includes(user.role)) {
     // Te sugiero este log temporal para que verifiques en consola qué string está llegando
-    console.log("⚠️ Acceso denegado. Rol del JWT:", user.role, "Roles permitidos:", allowedRoles);
     return <Navigate to="/unauthorized" replace />;
   }
 

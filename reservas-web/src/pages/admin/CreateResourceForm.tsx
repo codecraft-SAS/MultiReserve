@@ -76,8 +76,6 @@ export default function CreateResourceForm() {
       imageUrl: finalImageUrl 
     };
 
-    console.log("Payload enviado:", payload);
-
     try {
       await api.post("/resources", payload);
       toast.success("¡Recurso creado exitosamente!");

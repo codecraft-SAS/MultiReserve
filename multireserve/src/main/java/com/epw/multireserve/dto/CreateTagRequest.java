@@ -5,8 +5,8 @@ import jakarta.validation.constraints.Size;
 
 public class CreateTagRequest {
 
-    @NotBlank(message = "name is required")
-    @Size(max = 80, message = "name must be <= 80 chars")
+    @NotBlank(message = "El nombre es obligatorio")
+    @Size(max = 80, message = "El nombre debe tener máximo 80 caracteres")
     private String name;
 
     public String getName() {

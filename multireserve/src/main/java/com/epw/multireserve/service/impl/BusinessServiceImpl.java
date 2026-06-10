@@ -30,7 +30,7 @@ public class BusinessServiceImpl implements BusinessService {
         }
 
         // =========================
-        // CREATE (CORREGIDO)
+        // CREAR
         // =========================
         @Override
         public BusinessResponse create(CreateBusinessRequest request, String email) {
@@ -57,7 +57,7 @@ public class BusinessServiceImpl implements BusinessService {
         }
 
         // =========================
-        // LIST
+        // LISTAR
         // =========================
         @Override
         @Transactional(readOnly = true)
@@ -66,7 +66,7 @@ public class BusinessServiceImpl implements BusinessService {
         }
 
         // =========================
-        // GET BY ID
+        // OBTENER POR ID
         // =========================
         @Override
         @Transactional(readOnly = true)
@@ -77,7 +77,7 @@ public class BusinessServiceImpl implements BusinessService {
         }
 
         // =========================
-        // UPDATE
+        // ACTUALIZAR
         // =========================
         @Override
         public BusinessResponse update(Long id, UpdateBusinessRequest request) {
@@ -106,18 +106,18 @@ public class BusinessServiceImpl implements BusinessService {
         }
 
         // =========================
-        // DELETE
+        // ELIMINAR
         // =========================
         @Override
         public void delete(Long id) {
                 if (!repository.existsById(id)) {
-                        throw new ResourceNotFoundException("Business " + id + " not found");
+                        throw new ResourceNotFoundException("Negocio " + id + " no encontrado");
                 }
                 repository.deleteById(id);
         }
 
         // =========================
-        // BY OWNER
+        // POR PROPIETARIO
         // =========================
         @Override
         @Transactional(readOnly = true)
@@ -177,7 +177,7 @@ public class BusinessServiceImpl implements BusinessService {
         }
 
         // =========================
-        // MAPPER
+        // MAPEADOR
         // =========================
         private BusinessResponse toResponse(Business business) {
                 BusinessResponse response = new BusinessResponse();

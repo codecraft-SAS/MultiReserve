@@ -33,7 +33,7 @@ public class DataInitializer {
                 repository.save(admin);
 
                 System.out.println(
-                        "🔥 ADMIN CREATED");
+                        "🔥 ADMIN CREADO");
             }
         };
     }

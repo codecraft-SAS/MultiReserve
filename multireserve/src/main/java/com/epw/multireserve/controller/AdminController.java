@@ -54,7 +54,7 @@ public class AdminController {
                                                                                                    // solo al crear
 
         if (repository.existsByEmail(request.getEmail())) {
-            throw new IllegalArgumentException("Email already registered");
+            throw new IllegalArgumentException("El correo ya está registrado");
         }
 
         User user = User.builder()
@@ -66,7 +66,7 @@ public class AdminController {
 
         if (request.getBusinessId() != null) {
             Business business = businessRepository.findById(request.getBusinessId())
-                    .orElseThrow(() -> new IllegalArgumentException("Business not found with id: " + request.getBusinessId()));
+                    .orElseThrow(() -> new IllegalArgumentException("Negocio no encontrado con id: " + request.getBusinessId()));
             user.setBusiness(business);
         }
 
@@ -98,14 +98,14 @@ public class AdminController {
                                                              // viene vacía
 
         User user = repository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("User not found with id: " + id));
+                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado con id: " + id));
 
         // Validar que el correo no le pertenezca a un tercero usando primitivos
         // estricto
         if (request.getEmail() != null) {
             repository.findByEmail(request.getEmail()).ifPresent(existingUser -> {
                 if (existingUser.getId().longValue() != id.longValue()) {
-                    throw new IllegalArgumentException("Email already in use by another account");
+                    throw new IllegalArgumentException("El correo ya está en uso por otra cuenta");
                 }
             });
             user.setEmail(request.getEmail());
@@ -129,7 +129,7 @@ public class AdminController {
         if (request.getRole() != null && request.getRole().name().equals("EMPLOYEE")) {
             if (request.getBusinessId() != null) {
                 Business business = businessRepository.findById(request.getBusinessId())
-                        .orElseThrow(() -> new IllegalArgumentException("Business not found with id: " + request.getBusinessId()));
+                    .orElseThrow(() -> new IllegalArgumentException("Negocio no encontrado con id: " + request.getBusinessId()));
                 user.setBusiness(business);
             } else {
                 user.setBusiness(null);
@@ -149,11 +149,11 @@ public class AdminController {
     @PreAuthorize("hasRole('ADMIN')")
     public void deleteUser(@PathVariable("id") Long id) {
         if (id == null) {
-            throw new IllegalArgumentException("The given id must not be null");
+            throw new IllegalArgumentException("El id no debe ser nulo");
         }
 
         if (!repository.existsById(id)) {
-            throw new IllegalArgumentException("User not found with id: " + id);
+            throw new IllegalArgumentException("Usuario no encontrado con id: " + id);
         }
         repository.deleteById(id);
     }

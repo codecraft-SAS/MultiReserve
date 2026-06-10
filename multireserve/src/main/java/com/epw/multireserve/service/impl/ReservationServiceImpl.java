@@ -45,9 +45,9 @@ public class ReservationServiceImpl implements ReservationService {
         this.resourceRepository = resourceRepository;
     }
 
-    // ==========================================
-    // CREATE
-    // ==========================================
+        // ==========================================
+        // CREAR
+        // ==========================================
     @Override
     public ReservationResponse create(CreateReservationRequest request) {
 
@@ -86,7 +86,7 @@ public class ReservationServiceImpl implements ReservationService {
         r.setAmountPaid(request.getAmountPaid() != null ? request.getAmountPaid() : 0.0);
         r.setPaymentMethod(request.getPaymentMethod());
 
-        // Link resource and derive business from it
+        // Vincular recurso y derivar el negocio desde este
         if (request.getResourceId() != null) {
             Resource resource = resourceRepository.findById(request.getResourceId())
                     .orElseThrow(() -> new ResourceNotFoundException(
@@ -97,7 +97,7 @@ public class ReservationServiceImpl implements ReservationService {
             }
         }
 
-        // businessId in request overrides the resource-derived business
+        // businessId en la solicitud sobreescribe el negocio derivado del recurso
         if (request.getBusinessId() != null) {
             Business business = businessRepository.findById(request.getBusinessId())
                     .orElseThrow(() -> new ResourceNotFoundException(
@@ -118,9 +118,9 @@ public class ReservationServiceImpl implements ReservationService {
         return toResponse(saved);
     }
 
-    // ==========================================
-    // LIST
-    // ==========================================
+        // ==========================================
+        // LISTAR
+        // ==========================================
     @Override
     @Transactional(readOnly = true)
     public List<ReservationResponse> list() {
@@ -153,9 +153,9 @@ public class ReservationServiceImpl implements ReservationService {
                 .toList();
     }
 
-    // ==========================================
-    // LIST BY CUSTOMER NAME
-    // ==========================================
+        // ==========================================
+        // LISTAR POR NOMBRE DE CLIENTE
+        // ==========================================
     @Override
     @Transactional(readOnly = true)
     public List<ReservationResponse> findByCustomerName(String customerName) {
@@ -165,9 +165,9 @@ public class ReservationServiceImpl implements ReservationService {
                 .toList();
     }
 
-    // ==========================================
-    // GET BY ID
-    // ==========================================
+        // ==========================================
+        // OBTENER POR ID
+        // ==========================================
     @Override
     @Transactional(readOnly = true)
     public ReservationResponse getById(Long id) {
@@ -176,9 +176,9 @@ public class ReservationServiceImpl implements ReservationService {
         return toResponse(r);
     }
 
-    // ==========================================
-    // UPDATE
-    // ==========================================
+        // ==========================================
+        // ACTUALIZAR
+        // ==========================================
     @Override
     public ReservationResponse update(Long id, UpdateReservationRequest request) {
         Reservation r = repository.findById(id)
@@ -211,9 +211,9 @@ public class ReservationServiceImpl implements ReservationService {
         return toResponse(repository.save(r));
     }
 
-    // ==========================================
-    // DELETE
-    // ==========================================
+        // ==========================================
+        // ELIMINAR
+        // ==========================================
     @Override
     public void delete(Long id) {
         if (!repository.existsById(id)) {
@@ -222,9 +222,9 @@ public class ReservationServiceImpl implements ReservationService {
         repository.deleteById(id);
     }
 
-    // ==========================================
-    // CONFIRM
-    // ==========================================
+        // ==========================================
+        // CONFIRMAR
+        // ==========================================
     @Override
     public ReservationResponse confirm(Long id) {
         Reservation reservation = repository.findById(id)
@@ -235,9 +235,9 @@ public class ReservationServiceImpl implements ReservationService {
         return toResponse(repository.save(reservation));
     }
 
-    // ==========================================
-    // CHANGE STATUS
-    // ==========================================
+        // ==========================================
+        // CAMBIAR ESTADO
+        // ==========================================
     @Override
     public ReservationResponse changeStatus(Long id, String status) {
         Reservation reservation = repository.findById(id)
@@ -255,9 +255,9 @@ public class ReservationServiceImpl implements ReservationService {
         return toResponse(repository.save(reservation));
     }
 
-    // ==========================================
-    // MAPPER
-    // ==========================================
+        // ==========================================
+        // MAPEADOR
+        // ==========================================
     private ReservationResponse toResponse(Reservation r) {
         ReservationResponse res = new ReservationResponse();
 
@@ -276,14 +276,14 @@ public class ReservationServiceImpl implements ReservationService {
         res.setPaymentMethod(r.getPaymentMethod());
         res.setRemainingBalance(r.getRemainingBalance());
 
-        // USER
+        // USUARIO
         if (r.getUser() != null) {
             res.setUserId(r.getUser().getId());
             res.setUserName(r.getUser().getFullName());
             res.setUserEmail(r.getUser().getEmail());
         }
 
-        // BUSINESS
+        // NEGOCIO
         if (r.getBusiness() != null) {
             res.setBusinessId(r.getBusiness().getId());
             res.setBusinessName(r.getBusiness().getName());

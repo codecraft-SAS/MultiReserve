@@ -6,7 +6,7 @@ import jakarta.validation.constraints.NotNull;
 
 public class CreateReminderRequest {
 
-    @NotNull(message = "remindAt is required")
+    @NotNull(message = "La fecha de recordatorio es obligatoria")
     private LocalDateTime remindAt;
 
     private String note;

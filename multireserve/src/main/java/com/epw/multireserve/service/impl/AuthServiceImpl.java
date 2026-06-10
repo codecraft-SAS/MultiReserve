@@ -37,12 +37,12 @@ public class AuthServiceImpl implements AuthService {
         }
 
         // ==========================================
-        // REGISTER (Público de la Web)
+        // REGISTRO (Público)
         // ==========================================
         @Override
         public AuthResponse register(RegisterRequest request) {
                 if (repository.existsByEmail(request.getEmail())) {
-                        throw new IllegalArgumentException("Email already registered");
+                        throw new IllegalArgumentException("El correo ya está registrado");
                 }
 // Por defecto, cualquier usuario que se registre desde la web será CLIENT
                 User user = User.builder()
@@ -59,15 +59,15 @@ public class AuthServiceImpl implements AuthService {
         }
 
         // ==========================================
-        // LOGIN
+        // INICIO DE SESIÓN
         // ==========================================
         @Override
         public AuthResponse login(LoginRequest request) {
                 User user = repository.findByEmail(request.getEmail())
-                                .orElseThrow(() -> new IllegalArgumentException("Invalid credentials"));
+                                .orElseThrow(() -> new IllegalArgumentException("Credenciales inválidas"));
 // Validar contraseña usando PasswordEncoder
                 if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-                        throw new IllegalArgumentException("Invalid credentials");
+                        throw new IllegalArgumentException("Credenciales inválidas");
                 }
 // Generar token JWT con email y rol del usuario
                 String token = jwtService.generateToken(user.getEmail(), user.getRole().name());
@@ -75,7 +75,7 @@ public class AuthServiceImpl implements AuthService {
         }
 
         // ==========================================
-        // UPDATE PROFILE (Usuario autenticado)
+        // ACTUALIZAR PERFIL (Usuario autenticado)
         // ==========================================
         @Override
         @Transactional
@@ -131,7 +131,7 @@ public class AuthServiceImpl implements AuthService {
         @Override
         public AuthResponse saveUserFromAdmin(RegisterRequest request) {
                 if (repository.existsByEmail(request.getEmail())) {
-                        throw new IllegalArgumentException("Email already registered");
+                        throw new IllegalArgumentException("El correo ya está registrado");
                 }
 
                 Role assignedRole = Role.CLIENT;
@@ -157,7 +157,7 @@ public class AuthServiceImpl implements AuthService {
         @Override
         public AuthResponse updateUserFields(Long id, RegisterRequest request) {
                 User user = repository.findById(id)
-                                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
 
                 user.setFullName(request.getFullName());
                 user.setEmail(request.getEmail());
@@ -181,7 +181,7 @@ public class AuthServiceImpl implements AuthService {
         @Override
         public void removeUser(Long id) {
                 if (!repository.existsById(id)) {
-                        throw new IllegalArgumentException("User not found");
+                        throw new IllegalArgumentException("Usuario no encontrado");
                 }
                 repository.deleteById(id);
         }

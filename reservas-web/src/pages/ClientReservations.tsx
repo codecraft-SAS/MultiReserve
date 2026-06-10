@@ -29,13 +29,6 @@ export default function ClientReservations() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [reservationToDelete, setReservationToDelete] = useState<number | null>(null);
 
-  // DIAGNÓSTICO EN CONSOLA
-  useEffect(() => {
-    if (reservations && reservations.length > 0) {
-      console.log("🚀 TUS RESERVAS EN BRUTO DESDE EL BACKEND:", reservations);
-    }
-  }, [reservations]);
-
   // 🛠️ LÓGICA PARA ABRIR EL MODAL DE CANCELACIÓN
   const handleCancelClick = (id: number) => {
     setReservationToCancel(id);

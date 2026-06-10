@@ -30,7 +30,7 @@ public class CustomUserDetailsService
 // Buscar usuario por email usando UserRepository
         User user = repository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException(
-                        "User not found"));
+                        "Usuario no encontrado"));
 
         return new org.springframework.security.core.userdetails.User(
                 user.getEmail(),

@@ -21,7 +21,7 @@ import com.epw.multireserve.entity.ResourceType;
 import com.epw.multireserve.entity.User;
 import com.epw.multireserve.exception.ResourceNotFoundException;
 import com.epw.multireserve.repository.BusinessRepository;
-import com.epw.multireserve.repository.ReservationRepository;
+
 import com.epw.multireserve.repository.ResourceRepository;
 import com.epw.multireserve.repository.UserRepository;
 import com.epw.multireserve.service.ResourceService;
@@ -48,7 +48,7 @@ public class ResourceServiceImpl implements ResourceService {
         }
 
         // ==========================================
-        // CREATE
+        // CREAR
         // ==========================================
         @Override
         public ResourceResponse create(CreateResourceRequest request) {
@@ -68,12 +68,6 @@ public class ResourceServiceImpl implements ResourceService {
                                 .findById(request.getBusinessId())
                                 .orElseThrow(() -> new ResourceNotFoundException(
                                                 "Business " + request.getBusinessId() + " not found"));
-<<<<<<< HEAD
-                }
-
-=======
-// Validar y mapear el tipo y estado del recurso usando los métodos de parsing
->>>>>>> 9279604bdcbf6132ca36e3abf24ab78b44047789
                 Resource resource = new Resource();
                 resource.setName(request.getName());
                 resource.setPricePerHour(request.getPricePerHour());
@@ -92,7 +86,7 @@ public class ResourceServiceImpl implements ResourceService {
         }
 
         // ==========================================
-        // LIST
+        // LISTAR
         // ==========================================
         @Override
         @Transactional(readOnly = true)
@@ -121,7 +115,7 @@ public class ResourceServiceImpl implements ResourceService {
         }
 
         // ==========================================
-        // GET BY ID
+        // OBTENER POR ID
         // ==========================================
         @Override
         @Transactional(readOnly = true)
@@ -132,7 +126,7 @@ public class ResourceServiceImpl implements ResourceService {
         }
 
         // ==========================================
-        // UPDATE
+        // ACTUALIZAR
         // ==========================================
         @Override
         public ResourceResponse update(Long id, UpdateResourceRequest request) {
@@ -176,7 +170,7 @@ public class ResourceServiceImpl implements ResourceService {
         }
 
         // ==========================================
-        // DELETE
+        // ELIMINAR
         // ==========================================
         @Override
         public void delete(Long id) {
@@ -199,7 +193,7 @@ public class ResourceServiceImpl implements ResourceService {
         }
 
         // ==========================================
-        // LIST BY BUSINESS
+        // LISTAR POR NEGOCIO
         // ==========================================
         @Override
         @Transactional(readOnly = true)
@@ -208,13 +202,13 @@ public class ResourceServiceImpl implements ResourceService {
         }
 
         // ==========================================
-        // GET AVAILABILITY
+        // OBTENER DISPONIBILIDAD
         // ==========================================
         @Override
         @Transactional(readOnly = true)
         public List<String> getAvailability(Long resourceId, String date) {
                 if (!repository.existsById(resourceId)) {
-                        throw new ResourceNotFoundException("Resource " + resourceId + " not found");
+                        throw new ResourceNotFoundException("Recurso " + resourceId + " no encontrado");
                 }
 
                 LocalDate localDate;
@@ -222,7 +216,7 @@ public class ResourceServiceImpl implements ResourceService {
                         // Aseguramos que el formato sea ISO (YYYY-MM-DD)
                         localDate = LocalDate.parse(date, DateTimeFormatter.ISO_DATE);
                 } catch (DateTimeParseException e) {
-                        throw new IllegalArgumentException("Invalid date format. Expected YYYY-MM-DD");
+                        throw new IllegalArgumentException("Formato de fecha inválido. Se esperaba YYYY-MM-DD");
                 }
 
                 // Aquí obtienes las reservas para ese recurso en ese día específico
@@ -234,7 +228,7 @@ public class ResourceServiceImpl implements ResourceService {
         }
 
         // ==========================================
-        // MAPPER
+        // MAPEADOR
         // ==========================================
         private ResourceResponse toResponse(Resource resource) {
                 ResourceResponse response = new ResourceResponse();
@@ -257,7 +251,7 @@ public class ResourceServiceImpl implements ResourceService {
         }
 
         // ==========================================
-        // ENUM PARSERS
+        // PARSEADORES DE ENUM
         // ==========================================
         private ResourceType parseResourceType(String input) {
                 if (input == null)

@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 public class GlobalExceptionHandler {
 
     // =========================
-    // ILLEGAL ARGUMENT
+    // ARGUMENTO INVÁLIDO
     // =========================
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ApiError> handleIllegalArgument(
@@ -28,7 +28,7 @@ public class GlobalExceptionHandler {
     }
 
     // =========================
-    // RESOURCE NOT FOUND
+    // RECURSO NO ENCONTRADO
     // =========================
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ApiError> handleNotFound(
@@ -45,7 +45,7 @@ public class GlobalExceptionHandler {
     }
 
     // =========================
-    // GENERAL EXCEPTION
+    // ERROR GENERAL
     // =========================
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiError> handleGeneral(
