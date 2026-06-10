@@ -36,41 +36,41 @@ public class SecurityConfig {
                                 .authorizeHttpRequests(auth -> auth
 
                                                 // =========================================================
-                                                // AUTH: Rutas públicas de acceso
+                                                // AUTH: Reglas segmentadas para proteger el Perfil
                                                 // =========================================================
-                                                .requestMatchers("/api/auth/**").permitAll()
+                                                // Rutas estrictamente públicas
+                                                .requestMatchers("/api/auth/login", "/api/auth/register").permitAll()
+
+                                                // Exigir autenticación explícita para la actualización de perfil
+                                                .requestMatchers("/api/auth/update-profile").authenticated()
 
                                                 // =====================================================================
-                                                // BUSINESSES: Reglas jerárquicas calibradas (De lo específico a lo
-                                                // general)
+                                                // BUSINESSES: Reglas jerárquicas calibradas
                                                 // =====================================================================
-
-                                                // 1. Permisiones públicas o para cualquier rol de lectura (Catálogo
-                                                // accesible)
+                                                // 1. Permisiones públicas o para cualquier rol de lectura
                                                 .requestMatchers(
-                                                                "/api/businesses", // El listado general
-                                                                "/api/businesses/active", // Negocios activos
-                                                                "/api/businesses/search/**", // Buscador
-                                                                "/api/businesses/search", // Buscador con QueryParams
-                                                                                          // (?keyword=)
-                                                                "/api/businesses/category/**", // Filtro de categoría
-                                                                "/api/businesses/city/**", // Filtro de ciudad
-                                                                "/api/businesses/{id}" // Ver detalle de un negocio
-                                                                                       // específico
-                                                ).permitAll()
+                                                                "/api/businesses",
+                                                                "/api/businesses/active",
+                                                                "/api/businesses/search/**",
+                                                                "/api/businesses/search",
+                                                                "/api/businesses/category/**",
+                                                                "/api/businesses/city/**",
+                                                                "/api/businesses/{id}")
+                                                .permitAll()
 
-                                                // 2. KPIS y Métricas exclusivas del Dashboard de Administración
-                                                .requestMatchers("/api/businesses/kpis").hasRole("ADMIN")
+                                                // 2. KPIs con coincidencia exacta de Authority sin prefijo ROLE_
+                                                .requestMatchers("/api/businesses/kpis").hasAuthority("ADMIN")
 
-                                                // 3. Restricción absoluta para operaciones de escritura (Crear,
-                                                // Modificar, Eliminar)
-                                                .requestMatchers("/api/businesses/**").hasRole("ADMIN")
+                                                // 3. Escritura de negocios con coincidencia exacta de Authority
+                                                .requestMatchers("/api/businesses/**").hasAuthority("ADMIN")
 
                                                 // =========================================================
-                                                // RESERVATIONS: Acceso a todos los roles autenticados
+                                                // RESERVATIONS: 🔥 BLINDADO DOBLE PARA EVITAR EL 403
                                                 // =========================================================
+                                                // Acepta roles con y sin el prefijo ROLE_ según cómo viaje en tu JWT
                                                 .requestMatchers("/api/reservations/**")
-                                                .hasAnyRole("ADMIN", "CLIENT", "EMPLOYEE")
+                                                .hasAnyAuthority("ADMIN", "CLIENT", "EMPLOYEE", "ROLE_ADMIN",
+                                                                "ROLE_CLIENT", "ROLE_EMPLOYEE")
 
                                                 // =========================================================
                                                 // TODO LO DEMÁS: Requiere token válido
@@ -89,21 +89,13 @@ public class SecurityConfig {
         public CorsConfigurationSource corsConfigurationSource() {
                 CorsConfiguration configuration = new CorsConfiguration();
 
-                // Autorizamos al frontend de React corriendo en Vite a comunicarse con el
-                // backend
                 configuration.setAllowedOrigins(List.of("http://localhost:5173"));
-
-                // ✅ Métodos permitidos ahora incluyen PATCH
                 configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
-
-                // Cabeceras permitidas
                 configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "Cache-Control"));
-
-                // Permitir credenciales si fuesen necesarias
                 configuration.setAllowCredentials(true);
 
                 UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-                source.registerCorsConfiguration("/**", configuration); // Aplicar estas reglas a todos los endpoints
+                source.registerCorsConfiguration("/**", configuration);
                 return source;
         }
 }

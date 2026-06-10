@@ -2,6 +2,7 @@ package com.epw.multireserve.dto;
 
 import com.epw.multireserve.entity.ResourceStatus;
 import com.epw.multireserve.entity.ResourceType;
+import com.fasterxml.jackson.annotation.JsonProperty; // 🌟 IMPORTACIÓN REQUERIDA
 
 public class ResourceResponse {
 
@@ -11,6 +12,7 @@ public class ResourceResponse {
 
     private ResourceType type;
 
+    @JsonProperty("pricePerHour") // 🌟 FUERZA EL CAMELCASE EN EL JSON
     private Double pricePerHour;
 
     // Imagen del recurso

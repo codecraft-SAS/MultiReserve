@@ -28,6 +28,13 @@ public class ReservationResponse {
     private Double amount;
 
     // =========================
+    // NUEVOS CAMPOS DE PAGO
+    // =========================
+    private Double amountPaid;
+    private String paymentMethod;
+    private Double remainingBalance;
+
+    // =========================
     // BUSINESS
     // =========================
     private Long businessId;
@@ -120,6 +127,30 @@ public class ReservationResponse {
 
     public void setAmount(Double amount) {
         this.amount = amount;
+    }
+
+    public Double getAmountPaid() {
+        return amountPaid;
+    }
+
+    public void setAmountPaid(Double amountPaid) {
+        this.amountPaid = amountPaid;
+    }
+
+    public String getPaymentMethod() {
+        return paymentMethod;
+    }
+
+    public void setPaymentMethod(String paymentMethod) {
+        this.paymentMethod = paymentMethod;
+    }
+
+    public Double getRemainingBalance() {
+        return remainingBalance;
+    }
+
+    public void setRemainingBalance(Double remainingBalance) {
+        this.remainingBalance = remainingBalance;
     }
 
     public Long getBusinessId() {

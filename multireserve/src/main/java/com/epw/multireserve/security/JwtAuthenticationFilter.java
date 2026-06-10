@@ -33,8 +33,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             @NonNull HttpServletResponse response,
             @NonNull FilterChain filterChain) throws ServletException, IOException {
 
-        // ✅ Ignorar rutas de autenticación (login y register)
-        if (request.getServletPath().startsWith("/api/auth")) {
+        String path = request.getServletPath();
+
+        // 🚀 CORRECCIÓN CRÍTICA: Solo ignoramos login y register.
+        // Cualquier otra ruta de /api/auth (como update-profile) DEBE procesar el token
+        // JWT.
+        if (path.equals("/api/auth/login") || path.equals("/api/auth/register")) {
             filterChain.doFilter(request, response);
             return;
         }
@@ -51,12 +55,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             UserDetails userDetails = this.userDetailsService.loadUserByUsername(email);
 
-            // ✅ VALIDACIÓN CRÍTICA: verificar token contra el usuario
+            // ✅ VALIDACIÓN: verificar token contra el usuario
             if (jwtService.isTokenValid(jwt, userDetails.getUsername())) {
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                         userDetails,
                         null,
-                        userDetails.getAuthorities()); // 👈 roles correctos
+                        userDetails.getAuthorities()); // Ahora sí inyectará los roles correctamente
 
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authToken);

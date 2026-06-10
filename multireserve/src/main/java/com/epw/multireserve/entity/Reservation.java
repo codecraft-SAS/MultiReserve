@@ -36,85 +36,68 @@ public class Reservation {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // Nombre del cliente (para invitados sin cuenta)
     @Column(nullable = false, length = 120)
     private String customerName;
 
-    // Tipo de recurso (fase 1: compatibilidad)
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private ResourceType resourceType;
 
-    // Nombre del recurso (fase 1: compatibilidad)
     @Column(nullable = false, length = 100)
     private String resourceName;
 
-    // Fecha reserva
     @Column(nullable = false)
     private LocalDate reservationDate;
 
-    // Hora inicio
     @Column(nullable = false)
     private LocalTime startTime;
 
-    // Hora final
     @Column(nullable = false)
     private LocalTime endTime;
 
-    // Duración total en horas
     private Integer totalHours;
 
-    // Estado reserva
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private ReservationStatus status = ReservationStatus.PENDING;
 
-    // Precio final
     private Double amount;
 
     // =========================
-    // RELACIÓN BUSINESS
+    // NUEVOS CAMPOS DE PAGO
+    // =========================
+    @Column(nullable = false)
+    private Double amountPaid = 0.0;
+
+    private String paymentMethod;
+
+    private Double remainingBalance;
+
+    // =========================
+    // RELACIONES
     // =========================
     @ManyToOne
     @JoinColumn(name = "business_id")
     private Business business;
 
-    // =========================
-    // RELACIÓN USER (lazy)
-    // =========================
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
 
-    // =========================
-    // RELACIÓN RESOURCE
-    // =========================
     @ManyToOne
     @JoinColumn(name = "resource_id")
     private Resource resource;
 
-    // =========================
-    // RELACIÓN REMINDERS
-    // =========================
     @OneToMany(mappedBy = "reservation", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Reminder> reminders = new ArrayList<>();
 
-    // =========================
-    // RELACIÓN DETAIL
-    // =========================
     @OneToOne(mappedBy = "reservation", cascade = CascadeType.ALL, orphanRemoval = true)
     private ReservationDetail detail;
 
-    // =========================
-    // RELACIÓN TAGS
-    // =========================
     @ManyToMany
     @JoinTable(name = "reservation_tag", joinColumns = @JoinColumn(name = "reservation_id"), inverseJoinColumns = @JoinColumn(name = "tag_id"))
     private Set<Tag> tags = new HashSet<>();
 
-    // =========================
-    // FECHAS
-    // =========================
     @Column(nullable = false, updatable = false)
     private Instant createdAt;
 
@@ -145,6 +128,8 @@ public class Reservation {
         }
         if (resource != null && totalHours != null) {
             this.amount = resource.getPricePerHour() * totalHours;
+            // Calculamos el saldo pendiente automáticamente
+            this.remainingBalance = this.amount - this.amountPaid;
         }
     }
 
@@ -226,6 +211,30 @@ public class Reservation {
 
     public void setAmount(Double amount) {
         this.amount = amount;
+    }
+
+    public Double getAmountPaid() {
+        return amountPaid;
+    }
+
+    public void setAmountPaid(Double amountPaid) {
+        this.amountPaid = amountPaid;
+    }
+
+    public String getPaymentMethod() {
+        return paymentMethod;
+    }
+
+    public void setPaymentMethod(String paymentMethod) {
+        this.paymentMethod = paymentMethod;
+    }
+
+    public Double getRemainingBalance() {
+        return remainingBalance;
+    }
+
+    public void setRemainingBalance(Double remainingBalance) {
+        this.remainingBalance = remainingBalance;
     }
 
     public Business getBusiness() {

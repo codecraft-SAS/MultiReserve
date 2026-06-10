@@ -8,42 +8,47 @@ import com.epw.multireserve.dto.UpdateReservationRequest;
 
 public interface ReservationService {
 
-    // =========================
-    // CREATE
-    // =========================
-    ReservationResponse create(CreateReservationRequest request);
+        // ==========================================
+        // CREATE
+        // ==========================================
+        ReservationResponse create(CreateReservationRequest request);
 
-    // =========================
-    // LIST ALL
-    // =========================
-    List<ReservationResponse> list();
+        // ==========================================
+        // LIST ALL (Consumido de forma global por el ADMIN)
+        // ==========================================
+        List<ReservationResponse> list();
 
-    // =========================
-    // GET BY ID
-    // =========================
-    ReservationResponse getById(Long id);
+        // ==========================================
+        // LIST BY CUSTOMER (🌟 Añadido para Ownership Security del CLIENT)
+        // ==========================================
+        List<ReservationResponse> findByCustomerName(String customerName);
 
-    // =========================
-    // UPDATE
-    // =========================
-    ReservationResponse update(
-            Long id,
-            UpdateReservationRequest request);
+        // ==========================================
+        // GET BY ID
+        // ==========================================
+        ReservationResponse getById(Long id);
 
-    // =========================
-    // DELETE
-    // =========================
-    void delete(Long id);
+        // ==========================================
+        // UPDATE
+        // ==========================================
+        ReservationResponse update(
+                        Long id,
+                        UpdateReservationRequest request);
 
-    // =========================
-    // CONFIRM RESERVATION
-    // =========================
-    ReservationResponse confirm(Long id);
+        // ==========================================
+        // DELETE
+        // ==========================================
+        void delete(Long id);
 
-    // =========================
-    // CHANGE STATUS
-    // =========================
-    ReservationResponse changeStatus(
-            Long id,
-            String status);
+        // ==========================================
+        // CONFIRM RESERVATION
+        // ==========================================
+        ReservationResponse confirm(Long id);
+
+        // ==========================================
+        // CHANGE STATUS
+        // ==========================================
+        ReservationResponse changeStatus(
+                        Long id,
+                        String status);
 }

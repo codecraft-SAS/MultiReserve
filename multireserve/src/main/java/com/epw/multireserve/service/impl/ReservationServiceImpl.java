@@ -38,19 +38,17 @@ public class ReservationServiceImpl implements ReservationService {
         this.userRepository = userRepository;
     }
 
-    // =========================
+    // ==========================================
     // CREATE
-    // =========================
+    // ==========================================
     @Override
     public ReservationResponse create(CreateReservationRequest request) {
 
-        // VALIDAR HORARIOS
         if (request.getStartTime().isAfter(request.getEndTime())
                 || request.getStartTime().equals(request.getEndTime())) {
             throw new IllegalArgumentException("Start time must be before end time");
         }
 
-        // VALIDAR RESERVAS CRUZADAS
         boolean existsOverlap = repository.existsOverlappingReservation(
                 request.getResourceName(),
                 request.getReservationDate(),
@@ -58,7 +56,7 @@ public class ReservationServiceImpl implements ReservationService {
                 request.getEndTime());
 
         if (existsOverlap) {
-            throw new IllegalArgumentException("This resource is already reserved for that time range");
+            throw new IllegalArgumentException("Este recurso ya está reservado para ese rango de tiempo");
         }
 
         Reservation r = new Reservation();
@@ -70,14 +68,9 @@ public class ReservationServiceImpl implements ReservationService {
         r.setStartTime(request.getStartTime());
         r.setEndTime(request.getEndTime());
 
-        // 🔒 Seguridad de status: todas las reservas nacen pendientes
         r.setStatus(ReservationStatus.PENDING);
-
         r.setAmount(request.getAmount());
 
-        // =========================
-        // USER (del contexto de seguridad)
-        // =========================
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String email = auth.getName();
 
@@ -86,7 +79,6 @@ public class ReservationServiceImpl implements ReservationService {
 
         r.setUser(user);
 
-        // BUSINESS
         if (request.getBusinessId() != null) {
             Business business = businessRepository.findById(request.getBusinessId())
                     .orElseThrow(() -> new ResourceNotFoundException(
@@ -99,48 +91,46 @@ public class ReservationServiceImpl implements ReservationService {
         return toResponse(saved);
     }
 
-    // =========================
+    // ==========================================
     // LIST
-    // =========================
+    // ==========================================
     @Override
     @Transactional(readOnly = true)
     public List<ReservationResponse> list() {
-
-        // Usuario autenticado
-        Authentication auth = SecurityContextHolder
-                .getContext()
-                .getAuthentication();
-
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String email = auth.getName();
 
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-        // =========================
-        // ADMIN -> VE TODO
-        // =========================
         if (user.getRole().name().equals("ADMIN")) {
-
             return repository.findAll()
                     .stream()
                     .map(this::toResponse)
                     .toList();
         }
 
-        // =========================
-        // CLIENT / EMPLOYEE
-        // SOLO SUS RESERVAS
-        // =========================
         return repository.findByUserId(user.getId())
                 .stream()
                 .map(this::toResponse)
                 .toList();
     }
 
-    // =========================
+    // ==========================================
+    // LIST BY CUSTOMER NAME
+    // ==========================================
+    @Override
+    @Transactional(readOnly = true)
+    public List<ReservationResponse> findByCustomerName(String customerName) {
+        return repository.findByCustomerName(customerName)
+                .stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
+    // ==========================================
     // GET BY ID
-    // =========================
+    // ==========================================
     @Override
     @Transactional(readOnly = true)
     public ReservationResponse getById(Long id) {
@@ -149,15 +139,14 @@ public class ReservationServiceImpl implements ReservationService {
         return toResponse(r);
     }
 
-    // =========================
+    // ==========================================
     // UPDATE
-    // =========================
+    // ==========================================
     @Override
     public ReservationResponse update(Long id, UpdateReservationRequest request) {
         Reservation r = repository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Reservation " + id + " not found"));
 
-        // VALIDAR HORARIOS
         if (request.getStartTime().isAfter(request.getEndTime())
                 || request.getStartTime().equals(request.getEndTime())) {
             throw new IllegalArgumentException("Start time must be before end time");
@@ -179,9 +168,9 @@ public class ReservationServiceImpl implements ReservationService {
         return toResponse(repository.save(r));
     }
 
-    // =========================
+    // ==========================================
     // DELETE
-    // =========================
+    // ==========================================
     @Override
     public void delete(Long id) {
         if (!repository.existsById(id)) {
@@ -190,9 +179,9 @@ public class ReservationServiceImpl implements ReservationService {
         repository.deleteById(id);
     }
 
-    // =========================
-    // CONFIRM RESERVATION
-    // =========================
+    // ==========================================
+    // CONFIRM
+    // ==========================================
     @Override
     public ReservationResponse confirm(Long id) {
         Reservation reservation = repository.findById(id)
@@ -203,9 +192,9 @@ public class ReservationServiceImpl implements ReservationService {
         return toResponse(repository.save(reservation));
     }
 
-    // =========================
+    // ==========================================
     // CHANGE STATUS
-    // =========================
+    // ==========================================
     @Override
     public ReservationResponse changeStatus(Long id, String status) {
         Reservation reservation = repository.findById(id)
@@ -223,9 +212,9 @@ public class ReservationServiceImpl implements ReservationService {
         return toResponse(repository.save(reservation));
     }
 
-    // =========================
+    // ==========================================
     // MAPPER
-    // =========================
+    // ==========================================
     private ReservationResponse toResponse(Reservation r) {
         ReservationResponse res = new ReservationResponse();
 
@@ -238,6 +227,11 @@ public class ReservationServiceImpl implements ReservationService {
         res.setEndTime(r.getEndTime());
         res.setStatus(r.getStatus());
         res.setAmount(r.getAmount());
+
+        // 🔄 NUEVOS CAMPOS DE PAGO
+        res.setAmountPaid(r.getAmountPaid());
+        res.setPaymentMethod(r.getPaymentMethod());
+        res.setRemainingBalance(r.getRemainingBalance());
 
         // USER
         if (r.getUser() != null) {

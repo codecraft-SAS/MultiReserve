@@ -32,35 +32,39 @@ public class ReservationController {
         this.service = service;
     }
 
-    // ==========================================
-    // CREATE
-    // ==========================================
+    // ========================================================================
+    // CREATE: Registrar reserva (Sincronizado con validaciones del Front)
+    // ========================================================================
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public ReservationResponse create(
-            @Valid @RequestBody CreateReservationRequest request) {
+    public ReservationResponse create(@Valid @RequestBody CreateReservationRequest request) {
+        // El servicio ahora recibe también amountPaid y paymentMethod
         return service.create(request);
     }
 
-    // ==========================================
-    // LIST ALL (Consumido por la tabla del Admin)
-    // ==========================================
+    // ========================================================================
+    // LIST: Soporta listado global (ADMIN) y filtrado por pertenencia (CLIENT)
+    // ========================================================================
     @GetMapping
-    public List<ReservationResponse> list() {
+    public List<ReservationResponse> list(
+            @RequestParam(required = false) String customerName) {
+        if (customerName != null && !customerName.trim().isEmpty()) {
+            return service.findByCustomerName(customerName.trim());
+        }
         return service.list();
     }
 
-    // ==========================================
-    // GET BY ID
-    // ==========================================
+    // ========================================================================
+    // GET BY ID: Consulta unitaria con Ownership Security integrada
+    // ========================================================================
     @GetMapping("/{id}")
     public ReservationResponse getById(@PathVariable Long id) {
         return service.getById(id);
     }
 
-    // ==========================================
-    // UPDATE (Full modification)
-    // ==========================================
+    // ========================================================================
+    // UPDATE: Modificación estructural completa
+    // ========================================================================
     @PutMapping("/{id}")
     public ReservationResponse update(
             @PathVariable Long id,
@@ -68,31 +72,30 @@ public class ReservationController {
         return service.update(id, request);
     }
 
-    // ==========================================
-    // DELETE
-    // ==========================================
+    // ========================================================================
+    // DELETE: Eliminación física/lógica del registro
+    // ========================================================================
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable Long id) {
         service.delete(id);
     }
 
-    // ==========================================
-    // CONFIRM RESERVATION (Acción directa alternativa)
-    // ==========================================
+    // ========================================================================
+    // CONFIRM RESERVATION: Aprobación directa por parte de Empleados
+    // ========================================================================
     @PatchMapping("/{id}/confirm")
     public ReservationResponse confirm(@PathVariable Long id) {
         return service.confirm(id);
     }
 
-    // ==========================================
-    // CHANGE STATUS (Consumido por los botones Check y X del front)
-    // ==========================================
+    // ========================================================================
+    // CHANGE STATUS: Consumido para transiciones dinámicas (CANCELLED, REJECTED)
+    // ========================================================================
     @PatchMapping("/{id}/status")
     public ReservationResponse changeStatus(
             @PathVariable Long id,
             @RequestParam String value) {
-        // Convierte a mayúsculas para evitar errores de case-sensitivity del cliente
         return service.changeStatus(id, value.toUpperCase().trim());
     }
 }

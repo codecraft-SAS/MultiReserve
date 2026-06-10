@@ -1,20 +1,26 @@
 package com.epw.multireserve.service.impl;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.epw.multireserve.dto.AuthResponse;
 import com.epw.multireserve.dto.LoginRequest;
 import com.epw.multireserve.dto.RegisterRequest;
+import com.epw.multireserve.dto.UpdateProfileRequest;
 import com.epw.multireserve.entity.Role;
 import com.epw.multireserve.entity.User;
+import com.epw.multireserve.exception.ResourceNotFoundException;
 import com.epw.multireserve.repository.UserRepository;
 import com.epw.multireserve.security.JwtService;
 import com.epw.multireserve.service.AuthService;
 
 @Service
-public class AuthServiceImpl
-                implements AuthService {
+@SuppressWarnings("null")
+public class AuthServiceImpl implements AuthService {
 
         private final UserRepository repository;
         private final PasswordEncoder passwordEncoder;
@@ -30,78 +36,153 @@ public class AuthServiceImpl
                 this.jwtService = jwtService;
         }
 
-        // =========================
-        // REGISTER
-        // =========================
+        // ==========================================
+        // REGISTER (Público de la Web)
+        // ==========================================
         @Override
-        public AuthResponse register(
-                        RegisterRequest request) {
-
-                // Verificar email duplicado
-                if (repository.existsByEmail(
-                                request.getEmail())) {
-
-                        throw new IllegalArgumentException(
-                                        "Email already registered");
+        public AuthResponse register(RegisterRequest request) {
+                if (repository.existsByEmail(request.getEmail())) {
+                        throw new IllegalArgumentException("Email already registered");
                 }
 
-                // Crear usuario
                 User user = User.builder()
                                 .fullName(request.getFullName())
                                 .email(request.getEmail())
-                                .password(
-                                                passwordEncoder.encode(
-                                                                request.getPassword()))
-
-                                // TODOS los usuarios registrados serán CLIENT
-                                .role(Role.CLIENT)
-
+                                .password(passwordEncoder.encode(request.getPassword()))
+                                .role(Role.CLIENT) // Por defecto es Cliente
                                 .build();
 
                 repository.save(user);
 
-                // Generar token con email + rol
-                String token = jwtService.generateToken(
-                                user.getEmail(),
-                                user.getRole().name());
-
-                return new AuthResponse(
-                                token,
-                                user.getFullName(),
-                                user.getEmail(),
-                                user.getRole().name());
+                String token = jwtService.generateToken(user.getEmail(), user.getRole().name());
+                return new AuthResponse(token, user.getFullName(), user.getEmail(), user.getRole().name());
         }
 
-        // =========================
+        // ==========================================
         // LOGIN
-        // =========================
+        // ==========================================
         @Override
-        public AuthResponse login(
-                        LoginRequest request) {
+        public AuthResponse login(LoginRequest request) {
+                User user = repository.findByEmail(request.getEmail())
+                                .orElseThrow(() -> new IllegalArgumentException("Invalid credentials"));
 
-                User user = repository.findByEmail(
-                                request.getEmail())
-                                .orElseThrow(() -> new IllegalArgumentException(
-                                                "Invalid credentials"));
-
-                // Verificar password
-                if (!passwordEncoder.matches(
-                                request.getPassword(),
-                                user.getPassword())) {
-
-                        throw new IllegalArgumentException(
-                                        "Invalid credentials");
+                if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+                        throw new IllegalArgumentException("Invalid credentials");
                 }
 
-                // Generar token con email + rol
-                String token = jwtService.generateToken(
-                                user.getEmail(),
-                                user.getRole().name());
+                String token = jwtService.generateToken(user.getEmail(), user.getRole().name());
+                return new AuthResponse(token, user.getFullName(), user.getEmail(), user.getRole().name());
+        }
 
+        // ==========================================
+        // UPDATE PROFILE (Usuario autenticado)
+        // ==========================================
+        @Override
+        @Transactional
+        public AuthResponse updateProfile(String currentEmail, UpdateProfileRequest request) {
+                // 1. Buscar al usuario dueño del perfil en la base de datos
+                User user = repository.findByEmail(currentEmail)
+                                .orElseThrow(() -> new ResourceNotFoundException(
+                                                "Usuario no encontrado con el email: " + currentEmail));
+
+                // 🔍 VALIDACIÓN EVITA-ERROR-500: ¿El usuario cambió de verdad su email?
+                if (!user.getEmail().equalsIgnoreCase(request.getEmail())) {
+                        // Si el nuevo email ya existe en BD bajo el control de OTRA persona, arrojamos
+                        // un error limpio
+                        if (repository.existsByEmail(request.getEmail())) {
+                                throw new IllegalArgumentException(
+                                                "El correo electrónico ya se encuentra registrado por otro usuario");
+                        }
+                        // Si nadie lo usa, actualizamos de forma segura
+                        user.setEmail(request.getEmail());
+                }
+
+                // 2. Actualizar el resto de campos permitidos
+                user.setFullName(request.getFullName());
+
+                // 3. Guardar cambios de forma permanente en la Base de Datos
+                User updatedUser = repository.save(user);
+
+                // 4. Generar un nuevo token (ya que el email puede haber cambiado)
+                String newToken = jwtService.generateToken(updatedUser.getEmail(), updatedUser.getRole().name());
+
+                // 5. Devolver la respuesta estructurada hacia React
                 return new AuthResponse(
-                                token,
-                                user.getFullName(),
-                                user.getEmail(),
-                                user.getRole().name());
+                                newToken,
+                                updatedUser.getFullName(),
+                                updatedUser.getEmail(),
+                                updatedUser.getRole().name());
+        }
+
+        // ==========================================
+        // MÉTODOS DE ADMINISTRACIÓN DE USUARIOS
+        // ==========================================
+        @Override
+        public List<AuthResponse> findAllUsers() {
+                return repository.findAll().stream()
+                                .map(user -> new AuthResponse(
+                                                null,
+                                                user.getFullName(),
+                                                user.getEmail(),
+                                                user.getRole() != null ? user.getRole().name() : "CLIENT"))
+                                .collect(Collectors.toList());
+        }
+
+        @Override
+        public AuthResponse saveUserFromAdmin(RegisterRequest request) {
+                if (repository.existsByEmail(request.getEmail())) {
+                        throw new IllegalArgumentException("Email already registered");
+                }
+
+                Role assignedRole = Role.CLIENT;
+                if (request.getRole() != null) {
+                        try {
+                                assignedRole = Role.valueOf(request.getRole().toString().toUpperCase().trim());
+                        } catch (IllegalArgumentException e) {
+                                // Rol inválido, se mantiene CLIENT
+                        }
+                }
+
+                User user = User.builder()
+                                .fullName(request.getFullName())
+                                .email(request.getEmail())
+                                .password(passwordEncoder.encode(request.getPassword()))
+                                .role(assignedRole)
+                                .build();
+
+                repository.save(user);
+                return new AuthResponse(null, user.getFullName(), user.getEmail(), user.getRole().name());
+        }
+
+        @Override
+        public AuthResponse updateUserFields(Long id, RegisterRequest request) {
+                User user = repository.findById(id)
+                                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+                user.setFullName(request.getFullName());
+                user.setEmail(request.getEmail());
+
+                if (request.getPassword() != null && !request.getPassword().trim().isEmpty()) {
+                        user.setPassword(passwordEncoder.encode(request.getPassword()));
+                }
+
+                if (request.getRole() != null) {
+                        try {
+                                user.setRole(Role.valueOf(request.getRole().toString().toUpperCase().trim()));
+                        } catch (IllegalArgumentException e) {
+                                // Mantiene el rol previo si el valor es erróneo
+                        }
+                }
+
+                repository.save(user);
+                return new AuthResponse(null, user.getFullName(), user.getEmail(), user.getRole().name());
+        }
+
+        @Override
+        public void removeUser(Long id) {
+                if (!repository.existsById(id)) {
+                        throw new IllegalArgumentException("User not found");
+                }
+                repository.deleteById(id);
         }
 }

@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -53,7 +54,7 @@ public class ResourceController {
     // ==========================================
     @GetMapping("/{id}")
     public ResourceResponse getById(
-            @PathVariable("id") Long id) { // 🌟 Mapeo explícito para garantizar seguridad de tipos
+            @PathVariable("id") Long id) {
         if (id == null) {
             throw new IllegalArgumentException("The given id must not be null");
         }
@@ -65,7 +66,7 @@ public class ResourceController {
     // ==========================================
     @PutMapping("/{id}")
     public ResourceResponse update(
-            @PathVariable("id") Long id, // 🌟 Mapeo explícito asegurado
+            @PathVariable("id") Long id,
             @Valid @RequestBody UpdateResourceRequest request) {
         if (id == null) {
             throw new IllegalArgumentException("The given id must not be null");
@@ -79,7 +80,7 @@ public class ResourceController {
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(
-            @PathVariable("id") Long id) { // 🌟 Mapeo explícito asegurado para evitar silencios operativos
+            @PathVariable("id") Long id) {
         if (id == null) {
             throw new IllegalArgumentException("The given id must not be null");
         }
@@ -91,10 +92,20 @@ public class ResourceController {
     // ==========================================
     @GetMapping("/business/{businessId}")
     public List<ResourceResponse> getByBusiness(
-            @PathVariable("businessId") Long businessId) { // 🌟 Mapeo explícito del contexto de negocio
+            @PathVariable("businessId") Long businessId) {
         if (businessId == null) {
             throw new IllegalArgumentException("The given businessId must not be null");
         }
         return service.getByBusiness(businessId);
+    }
+
+    // ==========================================
+    // GET AVAILABILITY - GET /api/resources/{id}/availability
+    // ==========================================
+    @GetMapping("/{id}/availability")
+    public List<String> getAvailability(
+            @PathVariable("id") Long id,
+            @RequestParam("date") String date) {
+        return service.getAvailability(id, date);
     }
 }

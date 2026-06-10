@@ -8,37 +8,42 @@ import com.epw.multireserve.dto.UpdateResourceRequest;
 
 public interface ResourceService {
 
-    // =========================
-    // CREATE
-    // =========================
-    ResourceResponse create(
-            CreateResourceRequest request);
+        // =========================
+        // CREATE
+        // =========================
+        ResourceResponse create(
+                        CreateResourceRequest request);
 
-    // =========================
-    // LIST
-    // =========================
-    List<ResourceResponse> list();
+        // =========================
+        // LIST
+        // =========================
+        List<ResourceResponse> list();
 
-    // =========================
-    // GET BY ID
-    // =========================
-    ResourceResponse getById(Long id);
+        // =========================
+        // GET BY ID
+        // =========================
+        ResourceResponse getById(Long id);
 
-    // =========================
-    // UPDATE
-    // =========================
-    ResourceResponse update(
-            Long id,
-            UpdateResourceRequest request);
+        // =========================
+        // UPDATE
+        // =========================
+        ResourceResponse update(
+                        Long id,
+                        UpdateResourceRequest request);
 
-    // =========================
-    // DELETE
-    // =========================
-    void delete(Long id);
+        // =========================
+        // DELETE
+        // =========================
+        void delete(Long id);
 
-    // =========================
-    // LIST BY BUSINESS
-    // =========================
-    List<ResourceResponse> getByBusiness(
-            Long businessId);
+        // =========================
+        // LIST BY BUSINESS
+        // =========================
+        List<ResourceResponse> getByBusiness(
+                        Long businessId);
+
+        // =========================
+        // GET AVAILABILITY
+        // =========================
+        List<String> getAvailability(Long resourceId, String date);
 }
