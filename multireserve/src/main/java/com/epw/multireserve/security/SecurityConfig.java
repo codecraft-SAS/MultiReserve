@@ -58,16 +58,22 @@ public class SecurityConfig {
                                                                 "/api/businesses/{id}")
                                                 .permitAll()
 
+                                                // 🌟 NUEVO BLINDAJE: Permite actualizar el estado (Ojo) con
+                                                // coincidencia doble de roles
+                                                .requestMatchers("/api/businesses/*/status")
+                                                .hasAnyAuthority("ADMIN", "EMPLOYEE", "ROLE_ADMIN", "ROLE_EMPLOYEE")
+
                                                 // 2. KPIs con coincidencia exacta de Authority sin prefijo ROLE_
-                                                .requestMatchers("/api/businesses/kpis").hasAuthority("ADMIN")
+                                                .requestMatchers("/api/businesses/kpis")
+                                                .hasAnyAuthority("ADMIN", "ROLE_ADMIN")
 
-                                                // 3. Escritura de negocios con coincidencia exacta de Authority
-                                                .requestMatchers("/api/businesses/**").hasAuthority("ADMIN")
+                                                // 3. Escritura de negocios en general (Crear, borrar)
+                                                .requestMatchers("/api/businesses/**")
+                                                .hasAnyAuthority("ADMIN", "ROLE_ADMIN")
 
                                                 // =========================================================
-                                                // RESERVATIONS: 🔥 BLINDADO DOBLE PARA EVITAR EL 403
+                                                // RESERVATIONS: BLINDADO DOBLE
                                                 // =========================================================
-                                                // Acepta roles con y sin el prefijo ROLE_ según cómo viaje en tu JWT
                                                 .requestMatchers("/api/reservations/**")
                                                 .hasAnyAuthority("ADMIN", "CLIENT", "EMPLOYEE", "ROLE_ADMIN",
                                                                 "ROLE_CLIENT", "ROLE_EMPLOYEE")

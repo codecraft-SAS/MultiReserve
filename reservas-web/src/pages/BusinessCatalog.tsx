@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
-import { Loader2, MapPin, Calendar, X, Info, Store, Layers } from "lucide-react";
+import { Loader2, MapPin, Calendar, X, Info, Store, Layers, Phone } from "lucide-react";
 import type { Business } from "../types/Business";
 import type { Resource } from "../types/Resource";
 import { businessesApi } from "../api/businesses";
@@ -656,6 +656,12 @@ export default function BusinessCatalog() {
                   <span style={{ fontSize: "11px", color: "#52525b", fontWeight: 700, textTransform: "uppercase" }}>Contacto directo</span>
                   <p style={{ margin: "4px 0 0 0", fontSize: "13px", color: "#ffffff", wordBreak: "break-all" }}>{infoBusiness.email || "No provisto"}</p>
                 </div>
+                {/* 🌟 TELÉFONO DE CONTACTO AÑADIDO ACÁ */}
+                  {infoBusiness.phone && (
+                    <p style={{ margin: "6px 0 0 0", fontSize: "13px", color: "#ffffff", display: "flex", alignItems: "center", gap: "6px" }}>
+                      <Phone size={14} style={{ color: "#10b981" }} /> <span>{infoBusiness.phone}</span>
+                    </p>
+                  )}
               </div>
             </div>
 
